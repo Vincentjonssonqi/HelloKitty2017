@@ -1,4 +1,4 @@
-
+import time
 class Keypad:
     def __init__(self,keys,buffer,cb):
         self.keys = keys
@@ -50,11 +50,12 @@ class Keypad:
 
 
     def poll_row(self,row):
+        print(row)
         self.buffer.write(row)
         column = self.buffer.read()
-        if column != None:
-            self.event_cb("key_down")
-            return self.poll_key(row,column)
+        #if column != None:
+        #    self.event_cb("key_down")
+        #    return self.poll_key(row,column)
         return None;
 
 
@@ -73,4 +74,3 @@ class Keypad:
         self.event_cb("key_up")
         #print("column {}, row {}".format(column,row))
         return self.keys[row][column]
-                

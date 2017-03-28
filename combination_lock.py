@@ -8,7 +8,8 @@ from classes.printer import Printer
 #CONSTANTS--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 BUFFER_PINS = [11,10,9]
-BUFFER_FLOW_CONTROL_PIN = 14
+BUFFER_DISABLE_PIN = 15
+BUFFER_CLOCK_PIN = 14
 BUZZER_PIN = 7
 RED_LED_PIN = 6
 GREEN_LED_PIN = 5
@@ -16,7 +17,7 @@ ATTEMPT_LIMIT = 3
 DEACTIVATION_DURATION = 5                                                                       #The number of seconds the lock will be deactivated for if an attempt limit is reached
 OPENS_AT = datetime.time(9,0)                                                                   #Opens at 9AM
 CLOSES_AT = datetime.time(9,0)                                                                  #Closes at 17PM
-NO_REAL_BUFFER = True
+NO_REAL_BUFFER = False
 
 ALLOW_MAX_LOCKOUT = True
 
@@ -64,7 +65,7 @@ def setup_print_layout():
     printer.add("app","COMBINATION LOCK",True)
     printer.add("about","Enter the unlock code on the keypad, if the code is right, then good for you :)",True)
     printer.add("border_middle","",False)
-    printer.add("lock status","BOOTING...")
+    printer.add("lock status","BOOTING...",True)
     printer.add("border_middle2","",False)
     printer.add("status","Initilizing..",True)
     printer.add("keypad","[ deactivated ]",True)
@@ -88,8 +89,8 @@ def init():
     global lock
     lock = Lock(printer)
 
-    lock.init_buffer(BUFFER_PINS,BUFFER_FLOW_CONTROL_PIN,NO_REAL_BUFFER)
-
+    lock.init_buffer(BUFFER_PINS,BUFFER_DISABLE_PIN,BUFFER_CLOCK_PIN,NO_REAL_BUFFER)
+    lock.init_keypad()
     if ALLOW_MAX_LOCKOUT:
         lock.config_max_lockout(ATTEMPT_LIMIT,DEACTIVATION_DURATION)
 

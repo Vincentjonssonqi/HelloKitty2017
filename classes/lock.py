@@ -17,17 +17,17 @@ class Lock:
         self.has_buffer = False
         self.failed_attempts = 0
         self.printer = printer
+        self.password_line_timer = None
 
-
-    def init_buffer(buffer_pins,flow_control_pin,not_real):
-        self.buffer = Buffer(buffer_pins,flow_control_pin,not_real)
+    def init_buffer(self,buffer_pins,buffer_disable_pin,clock_pin,not_real):
+        self.buffer = Buffer(buffer_pins,buffer_disable_pin,clock_pin,not_real)
         self.has_buffer = True
-    def init_keypad():
+    def init_keypad(self):
         if self.has_buffer:
-            self.printer.reaplce("status","You need a buffer for the keypad, make sure you initilize it before you init the keypad")
+            self.printer.replace("status","You need a buffer for the keypad, make sure you initilize it before you init the keypad")
         self.keypad = Keypad([["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]],self.buffer,self.show)
 
-    def init_components(buzzer_pin,success_led_pin,error_led_pin):
+    def init_components(self,buzzer_pin,success_led_pin,error_led_pin):
         if not self.has_buffer:
             self.printer.replace("status","Need to initilize buffer before you do this mate")
 
@@ -36,13 +36,13 @@ class Lock:
         self.error_led = Led("green",error_led_pin,self.buffer)
         self.has_components = True
 
-    def set_password(password):
+    def set_password(self,password):
         self.password = password
-    def config_max_lockout(attempt_limit,deactivation_duration):
+    def config_max_lockout(self,attempt_limit,deactivation_duration):
         self.attempt_limit = attempt_limit
         self.deactivation_duration = deactivation_duration
 
-    def config_time_lockout(opens_at,closes_at):
+    def config_time_lockout(self,opens_at,closes_at):
         self.opens_at = datetime.combine(date.min,opens_at) - datetime.min
         self.closes_at = datetime.combine(date.min,closes_at) - datetime.min
 
