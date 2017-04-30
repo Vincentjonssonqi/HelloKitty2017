@@ -1,15 +1,17 @@
 import RPi.GPIO as GPIO
 import time
+import random
+
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
 class Buffer:
 
-    def __init__(self,pins,debug):
+    def __init__(self,pins,noHardware):
         self.pins = pins or []
         self.size = len(self.pins)                                                                  #Buffer size means basically the number of pins, meaning number of bits that can be stored in the buffer
-		self.debug = debug or False
+		self.noHardware = noHardware or False
 
     #write-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -33,7 +35,6 @@ class Buffer:
 
 
 
-
     #read-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description
@@ -48,10 +49,10 @@ class Buffer:
 
         buffer_values = []                                                                          #Generate buffer from the number
         for i in range(len(self.pins)):                                                             #LOOP over buffer values
-            pin_id = self.pins[i]                                                                 #fetch the pin id
+            pin_id = self.pins[i]                                                                 	#fetch the pin id
             GPIO.setup(pin_id,GPIO.IN)                                                              #Set the current buffer pin to output mode
             buffer_values.append(GPIO.input(pin_id))
-        return convert_buffer_to_column(buffer_values)
+        return convert_buffer_to_column(buffer_values) if not self.noHardware else random.randint(0,3)
 
 
 
@@ -111,5 +112,5 @@ class Buffer:
 
     def convert_buffer_to_column(self,buffer):
         for(i in range(len(buffer))):
-			if not buffer[len(buffer) - i]: return i
+			if not buffer[i]: return i
 		return None
