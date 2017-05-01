@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import RPi.GPIO as GPIO
 import time
 import random
@@ -11,7 +12,7 @@ class Buffer:
     def __init__(self,pins,noHardware):
         self.pins = pins or []
         self.size = len(self.pins)                                                                  #Buffer size means basically the number of pins, meaning number of bits that can be stored in the buffer
-		self.noHardware = noHardware or False
+        self.noHardware = noHardware or False
 
     #write-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -111,6 +112,6 @@ class Buffer:
     #Gives you an integer value back (either 0,1,2) or None if no column was active
 
     def convert_buffer_to_column(self,buffer):
-        for(i in range(len(buffer))):
-			if not buffer[i]: return i
-		return None
+        for i in range(len(buffer)):
+            if not buffer[i]: return i
+        return None

@@ -1,17 +1,22 @@
-
-from .keypad import Keypad
+#!/usr/bin/python
+import signal
+import sys
+from classes.lock import Lock
 
 #CONSTANTS--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 BUFFER_PINS = [11,10,9]
+BUZZER_PIN = 7
+RED_LED_PIN = 6
+GREEN_LED_PIN = 5
 KEYPAD_KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]]
-
+ATTEMPT_LIMIT = 3
+DEACTIVATION_DURATION = 60                                                                      #The number of seconds the lock will be deactivated for if an attempt limit is reached
+AVAILABLE_AT =  
 
 #GLOBAL VARIABLES------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-keypad = new Keypad(BUFFER_PINS,KEYPAD_KEYS)
-password = ""
 
 
 
@@ -35,18 +40,12 @@ def get_password():
         print(pswrd)
 
 
-#init_event_loop--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    #Description
-    #Initilizes the loop that listens on pins and decides what events to trigger
 
 
-def init_event_loop():
-    while True:
-        key = keypad.next_key()
-        print(key)
 
-
+def signal_handler(signal, frame):
+        lock.quit()
+        sys.exit(0)
 
 
 #init--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -56,9 +55,11 @@ def init_event_loop():
 
 
 def init():
-    password = get_password()
-    init_event_loop()
 
+    lock = Lock(get_password(),ATTEMPT_LIMIT,DEACTIVATION_DURATION,KEYPAD_KEYS,BUFFER_PINS,BUZZER_PIN,GREEN_LED_PIN,RED_LED_PIN)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.pause()
 
 
 
