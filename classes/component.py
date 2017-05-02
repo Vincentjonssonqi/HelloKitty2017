@@ -1,4 +1,3 @@
-#!/usr/bin/python
 class Component:
     is_on = False
     def __init__(self,command,buffer):
@@ -14,7 +13,6 @@ class Component:
         if self.is_on is not True:
             self.buffer.write(self.command)
             self.is_on = True
-            print("{} turned on".format(self.command))
     #off--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description:
@@ -24,7 +22,6 @@ class Component:
         if self.is_on is True:
             self.buffer.write(self.command)
             self.is_on = False
-            print("{} turned off".format(self.command))
 
     #toggle--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 import datetime
 class UnlockAttempt:
     def __init__(self):
@@ -8,10 +7,10 @@ class UnlockAttempt:
         self.was_successful = False
 
     def __str__(self):
-        return "{},{}".format(finished_at.isoformat(),1 if self.was_successful else -1)
+        return "{},{},{}".format(self.finished_at.isoformat(),1 if self.was_successful else -1,self.password)
     def __repr__(self):
         return self.__str__()
 
-    def outcome(was_successful):
+    def outcome(self,was_successful):
         self.was_successful = was_successful
         self.finished_at = datetime.datetime.now()

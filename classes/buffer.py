@@ -1,4 +1,3 @@
-#!/usr/bin/python
 import RPi.GPIO as GPIO
 import time
 import random
@@ -9,10 +8,10 @@ GPIO.setmode(GPIO.BCM)
 
 class Buffer:
 
-    def __init__(self,pins,noHardware):
+    def __init__(self,pins,no_hardware):
         self.pins = pins or []
         self.size = len(self.pins)                                                                  #Buffer size means basically the number of pins, meaning number of bits that can be stored in the buffer
-        self.noHardware = noHardware or False
+        self.no_hardware = no_hardware or False
 
     #write-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -26,8 +25,7 @@ class Buffer:
 
     def write(self,number):
 
-        buffer_values = convert_number_buffer(number)                                               #Generate buffer from the number
-        print(buffer_values)
+        buffer_values = self.convert_number_to_buffer(number)                                               #Generate buffer from the number
         for i in range(len(buffer_values)):                                                         #LOOP over buffer values
             pin_id = self.pins[i]                                                                 #fetch the pin id
             GPIO.setup(pin_id,GPIO.OUT)                                                             #Set the current buffer pin to output mode
@@ -53,7 +51,12 @@ class Buffer:
             pin_id = self.pins[i]                                                                 	#fetch the pin id
             GPIO.setup(pin_id,GPIO.IN)                                                              #Set the current buffer pin to output mode
             buffer_values.append(GPIO.input(pin_id))
-        return convert_buffer_to_column(buffer_values) if not self.noHardware else random.randint(0,3)
+        if self.no_hardware:
+            time.sleep(random.randint(0,1))
+            fake_value = random.randint(0,8)
+            return None if fake_value > 2 else fake_value
+            
+        return self.convert_buffer_to_column(buffer_values) 
 
 
 

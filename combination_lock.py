@@ -1,7 +1,9 @@
-#!/usr/bin/python
 import signal
+import time
 import sys
+import datetime
 from classes.lock import Lock
+from classes.printer import Printer
 
 #CONSTANTS--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -10,15 +12,17 @@ BUZZER_PIN = 7
 RED_LED_PIN = 6
 GREEN_LED_PIN = 5
 KEYPAD_KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]]
-ATTEMPT_LIMIT = 3
-DEACTIVATION_DURATION = 60                                                                      #The number of seconds the lock will be deactivated for if an attempt limit is reached
-AVAILABLE_AT =  
+ATTEMPT_LIMIT = 10
+DEACTIVATION_DURATION = 5                                                                      #The number of seconds the lock will be deactivated for if an attempt limit is reached
+OPENS_AT = datetime.time(9,0)                                                                   #Opens at 9AM
+CLOSES_AT = datetime.time(9,0)                                                             #Closes at 17PM
+NO_HARDWARE = True
 
 #GLOBAL VARIABLES------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
-
+lock = None
+printer = Printer()
 
 #get_password------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -42,12 +46,20 @@ def get_password():
 
 
 
-
 def signal_handler(signal, frame):
-        lock.quit()
-        sys.exit(0)
+    printer.replace("status","Preparing to exit")
+    
+    lock.quit()
+    printer.replace("status","Done")
+    time.sleep(.2)
+    printer.replace("status","Good bye Mike! If you happen to be anybody else then we are in a bit of tought situation. You see this is message will always be the same. Soo.. either you change your name or you have have to remember not to read this last message on exit.")
+    sys.exit(1)
 
-
+def setup_print_layout():
+    printer.add("title","PROGRAM: COMBINATION LOCK")
+    printer.add("subtitle","DESCRIPTION: Enter code on keypad")
+    printer.add("password","PASSWORD: []")
+    printer.add("status","STATUS: Initilizing..")
 #init--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description
@@ -55,11 +67,17 @@ def signal_handler(signal, frame):
 
 
 def init():
-
-    lock = Lock(get_password(),ATTEMPT_LIMIT,DEACTIVATION_DURATION,KEYPAD_KEYS,BUFFER_PINS,BUZZER_PIN,GREEN_LED_PIN,RED_LED_PIN)
-
+    
     signal.signal(signal.SIGINT, signal_handler)
-    signal.pause()
+    setup_print_layout()
+    #printer.replace("status","STATUS: test.")
+    #time.sleep(2)
+    #printer.replace("title","Title2.")
+    #time.sleep(2)
+    #printer.replace("password","password.")
+    global lock
+    lock = Lock(printer,get_password(),ATTEMPT_LIMIT,DEACTIVATION_DURATION,OPENS_AT,CLOSES_AT,KEYPAD_KEYS,BUFFER_PINS,BUZZER_PIN,GREEN_LED_PIN,RED_LED_PIN,NO_HARDWARE)
+    lock.boot()
 
 
 

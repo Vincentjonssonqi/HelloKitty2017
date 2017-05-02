@@ -1,32 +1,35 @@
-#!/usr/bin/python
 import time
-import datetime
+
+from datetime import datetime,date,timedelta
 import os
-from classes.keypad import Keypad
-from classes.buffer import Buffer
-from classes.buzzer import Buzzer
-from classes.led import Led
-from classes.unlockattempt import UnlockAttempt
+from .keypad import Keypad
+from .buffer import Buffer
+from .buzzer import Buzzer
+from .led import Led
+
+from .unlockattempt import UnlockAttempt
 class Lock:
 
-    failed_attempts = 0
-    def __init__(self,password,attempt_limit,deactivation_duration,keypad_keys,buffer_pins,buzzer_pin,success_led_pin, error_led_pin):
-        print("inside lock constructor")
+    
+    def __init__(self,printer,password,attempt_limit,deactivation_duration,opens_at,closes_at,keypad_keys,buffer_pins,buzzer_pin,success_led_pin, error_led_pin,no_hardware):
+        self.printer = printer
         self.locked = True
         self.password = password
         self.attempt_limit = attempt_limit
         self.deactivation_duration = deactivation_duration
-        self.buffer = Buffer(buffer_pins,True)
-        self.keypad = Keypad(keypad_keys,buffer)
+        self.failed_attempts = 0
 
-        self.buzzer = Buzzer(buzzer_pin,buffer)
+        self.opens_at = datetime.combine(date.min,opens_at) - datetime.min
+        self.closes_at = datetime.combine(date.min,closes_at) - datetime.min
+        self.buffer = Buffer(buffer_pins,no_hardware)
+        self.keypad = Keypad(keypad_keys,self.buffer,self.show)
+        
+        self.buzzer = Buzzer(buzzer_pin,self.buffer)
 
-        self.success_led = Led("red",success_led_pin,buffer)
-        self.error_led = Led("green",error_led_pin,buffer)
+        self.success_led = Led("red",success_led_pin,self.buffer)
+        self.error_led = Led("green",error_led_pin,self.buffer)
 
-        self.log("{},{}".format(datetime.datetime.now().isoformat(),0))
-
-        self.init_event_loop()
+        self.log("{},{},{}".format(datetime.now().isoformat(),0,"Start"))
 
 
     #init_event_loop--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -35,100 +38,143 @@ class Lock:
         #Initilizes the loop that listens on pins and decides what events to trigger
 
 
-    def init_event_loop():
+    def boot(self):
         attempt = None
         while True:
+            seconds_to_open = self.is_open()
+            if seconds_to_open > 0:    
+                self.deactivate(seconds_to_open)
+            
             key = self.keypad.next_key()
-            print(key)
             if not attempt:
                 attempt = UnlockAttempt()
+                self.printer.replace("status","STATUS: Attempt {0}".format(self.failed_attempts))
 
             attempt.password += key
-            attempt = attempt if evaluate_unlock_attempt(attempt) else None
+            
+            stars = (len(attempt.password) - 1 )*"*"
+            key = attempt.password[len(attempt.password)-1]
+            dashes = (len(self.password) - len(attempt.password))*"-"
+            self.printer.replace("password","PASSWORD [ {0}{1}{2} ]".format(stars,key,dashes))
+            
+            if self.is_password_complete(attempt.password):
+                self.unlock(attempt)
+                attempt = None
+            
+        
+
+    #is_open
+    def is_open(self):
+        timestamp = datetime.combine(date.min,datetime.now().time()) - datetime.min
+        if self.opens_at != self.closes_at:
+            if timestamp < self.opens_at or timestamp > self.closes_at:
+                return ((self.opens_at - timestamp) + timedelta(1,0)).total_seconds()
+        return 0
 
 
     #evaluate_unlock_attempt-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
-    def evaluate_unlock_attempt(attempt):
-        correct_content = self.password.startswith(attempt.password)
-        correct_length = len(self.password) == len(attempt.password)
+    def is_password_correct(self,password):
+        return self.password.startswith(password)
 
-        if not correct_content:
-            self.unlock_attempt_failed(attempt)
-            return False
-        else:
-            if correct_length:
-                self.unlock_attempt_successeded(attempt)
-                return False
-        return True
+    def is_password_complete(self,password):
+        return len(self.password) == len(password)
+
+    def is_password_complete_and_correct(self,password):
+        return self.is_password_correct(password) and self.is_password_complete(password)
 
 
 
 
 
+       
 
-    #unlock_attempt_failed-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-        #Write attempt
-
-    def unlock_attempt_failed(attempt):
-        self.buzzer.on()
-        self.error_led.on()
-        attempt.outcome(False)
-
-        self.log_attempt(str(attempt))
-        self.sleep(.5)
-        self.buzzer.off()
-        self.error_led.off()
-
-
-        self.failed_attempts += 1
-        if self.failed_attempts >= self.attempt_limit:
-            self.deactivate()
-            self.failed_attempts = 0
+        
+            
 
 
 
-    #unlock_attempt_successeded-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    #inidicate_unlock_success-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
         #Description:
         #
-    def unlock_attempt_successeded(attempt):
-        self.buzzer.on()
-        self.success_led.on()
-        self.locked = False
+    def show(self,state):
+        #print(state)
+        if state == "unlocked":
+            self.buzzer.on()
+            self.success_led.on()
+        elif state == "error":
+            self.buzzer.on()
+            self.error_led.on()
+        elif state == "key_down":
+            self.buzzer.on()
+            self.error_led.on()
+        else:
+            self.buzzer.off()
+            self.success_led.off()
+            self.error_led.off()
 
-        attempt.outcome(True)
 
-        self.log(str(attempt))
-        self.sleep(5)
-
-        self.buzzer.off()
-        self.success_led.off()
-        self.locked = True
-        self.failed_attempts = 0
-
-
-    def deactive():
-        countdown = self.deactivation_duration
-        while countdown > 0:
-            print("LOCKED {}s remaining".format(countdown))
+    def deactivate(self,duration):
+        countdown = duration
+        while countdown >= 0:
+            progress = int(50*(1-(float(countdown)/float(duration))))
+            #print(float(countdown)/float(duration),1-(countdown/duration),50*(1-(countdown/duration)),countdown,duration)
+            self.printer.replace("status","STATUS: Keypad deactivated: [{0}{1}] {2}s remaining".format((50- progress)*"=",progress*" ",countdown))
             time.sleep(1)
             countdown -= 1
+        self.printer.replace("status","STATUS: Keypad activated")
 
+    def lock(self):
+        self.printer.replace("status","STATUS: Locking...")
+        self.failed_attempts = 0
+        self.locked = True
+        self.show("lock")
+        self.printer.replace("status","STATUS: Done!")
+    
+    def unlock(self,attempt):
+        if self.is_password_complete_and_correct(attempt.password):
+            attempt.outcome(True)        
+            self.locked = False
+            self.printer.replace("status","STATUS: Unlocking...")
+            self.show("unlocked")
+            self.printer.replace("status","STATUS: Done!")
+            self.deactivate(5)
+            self.lock()
+        else:
+            self.printer.replace("status","STATUS: Wrong password!")
+            attempt.outcome(False)
+            self.failed_attempts += 1
+            if self.failed_attempts >= self.attempt_limit:
+                self.deactivate(self.deactivation_duration)
+                self.failed_attempts = 0
+            self.show("error")
+            self.deactivate(10)
+            self.show("")
+        self.log(str(attempt))
 
+        
+        
+    
+            
 
-    def log(line):
-        need_titles = not os.path.isfile('unlock-attempt.logs.csv')
+    def log(self,line):
+        #print("Writing to log.csv: {}".format(line))
+        self.printer.replace("status","STATUS: Updating logs..")
+        need_titles = not os.path.isfile('logs.csv')
         attempt_log_file = open("logs.csv","a")
         if need_titles:
-            attempt_log_file.write("#","Success\n")
-        attempt_log_file.write("{}\n".format(line))
+            attempt_log_file.write("#,Success,Message\n")
+        attempt_log_file.write("{0}\n".format(line))
         attempt_log_file.close()
 
 
-    def quit():
-        self.generate_summery_graph()
-        self.log("{},{}".format(datetime.datetime.now().isoformat(),0))
+    def quit(self):
+        lock.lock()
+        #run command line program that generates graph
+        self.printer.replace("status","STATUS: Generating graph of Access Times...")
+        last_log = "{},{},{}".format(datetime.now().isoformat(),0,"Shut down")
+        self.printer.replace("status","STATUS: Saving when the lock was shut down...")
+        self.log(last_log)

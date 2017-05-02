@@ -1,12 +1,9 @@
-#!/usr/bin/python
-from .buffer import Buffer
-from .led import Led
-class Keypad:
-    self.on_key_down = None
-    self.on_key_up = None
-    def __init__(self,keys,buffer):
-        self.keys = keys
 
+class Keypad:
+    def __init__(self,keys,buffer,cb):
+        self.keys = keys
+        self.event_cb = cb
+        self.buffer = buffer
 
 
 
@@ -21,7 +18,7 @@ class Keypad:
     #A string with the pressed key's face value.
     def next_key(self):
         while True:
-            key = poll_keypad()
+            key = self.poll_keypad()
             if key:
                 return key
 
@@ -37,7 +34,7 @@ class Keypad:
 
     def poll_keypad(self):
         for row in range(4):
-            key = poll_row(row)
+            key = self.poll_row(row)
             if key:
                 return key
         return None
@@ -55,8 +52,9 @@ class Keypad:
     def poll_row(self,row):
         self.buffer.write(row)
         column = self.buffer.read()
-        if column:
-            return poll_key(row,column)
+        if column != None:
+            self.event_cb("key_down")
+            return self.poll_key(row,column)
         return None;
 
 
@@ -67,11 +65,12 @@ class Keypad:
     #Polls a single row and checks a single column until the button is released
 
 
-    def poll_key(row,column):
-        self.buzzer.on()
-        while True:
+    def poll_key(self,row,column):
+        next_column = column
+        while next_column != None and next_column == column:
             self.buffer.write(row)
-            column = self.buffer.read()
-            if not column:
-                self.buzzer.off()
-                return self.keys[row][column]
+            next_column = self.buffer.read()
+        self.event_cb("key_up")
+        #print("column {}, row {}".format(column,row))
+        return self.keys[row][column]
+                
