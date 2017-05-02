@@ -1,5 +1,5 @@
 import time
-
+from threading import Timer
 from datetime import datetime,date,timedelta
 import os
 from .keypad import Keypad
@@ -10,7 +10,7 @@ from .led import Led
 from .unlockattempt import UnlockAttempt
 class Lock:
 
-    
+
     def __init__(self,printer,password,attempt_limit,deactivation_duration,opens_at,closes_at,keypad_keys,buffer_pins,buzzer_pin,success_led_pin, error_led_pin,no_hardware):
         self.printer = printer
         self.locked = True
@@ -23,7 +23,7 @@ class Lock:
         self.closes_at = datetime.combine(date.min,closes_at) - datetime.min
         self.buffer = Buffer(buffer_pins,no_hardware)
         self.keypad = Keypad(keypad_keys,self.buffer,self.show)
-        
+
         self.buzzer = Buzzer(buzzer_pin,self.buffer)
 
         self.success_led = Led("red",success_led_pin,self.buffer)
@@ -42,26 +42,34 @@ class Lock:
         attempt = None
         while True:
             seconds_to_open = self.is_open()
-            if seconds_to_open > 0:    
+            if seconds_to_open > 0:
                 self.deactivate(seconds_to_open)
-            
+
             key = self.keypad.next_key()
+
             if not attempt:
                 attempt = UnlockAttempt()
                 self.printer.replace("status","Attempt {0}".format(self.failed_attempts + 1))
 
             attempt.password += key
-            
-            stars = (len(attempt.password) - 1 )*"*"
-            key = attempt.password[len(attempt.password)-1]
-            dashes = (len(self.password) - len(attempt.password))*"-"
-            self.printer.replace("keypad","[ {0}{1}{2} ]".format(stars,key,dashes))
-            
+
+            if self.password_line_timer:
+                self.password_line_timer.cancel()
+            self.update_password_line(attempt.password,False)
+            self.password_line_timer = Timer(1.0,self.update_password_line,(attempt.password,True))
+            self.password_line_timer.start()
+
             if self.is_password_complete(attempt.password):
                 self.unlock(attempt)
                 attempt = None
-            
-        
+
+
+
+    def update_password_line(self,password,cover_all):
+        stars = (len(password) - 0 if cover_all else 1 )*"*"
+        key = password[len(password)-1] if not cover_all else ""
+        dashes = (len(self.password) - len(password))*"-"
+        self.printer.replace("keypad","[ {0}{1}{2} ]".format(stars,key,dashes))
 
     #is_open
     def is_open(self):
@@ -89,10 +97,10 @@ class Lock:
 
 
 
-       
 
-        
-            
+
+
+
 
 
 
@@ -119,14 +127,13 @@ class Lock:
 
     def deactivate(self,duration):
         countdown = duration
-        self.printer.replace("keypad","[ deactivated ]")
+        self.update_password_line("",False)
         while countdown >= 0:
-            progress = int(50*(1-(float(countdown)/float(duration))))
-            self.printer.replace("status","Keypad deactivated: [{0}{1}] {2}s remaining".format((50- progress)*"=",progress*" ",countdown))
+            progress = int(40*(1-(float(countdown)/float(duration))))
+            self.printer.replace("status","Keypad deactivated: [{0}{1}] {2}s remaining".format((40- progress)*"=",progress*" ",countdown))
             time.sleep(1)
             countdown -= 1
         self.printer.replace("status","Keypad activated")
-        self.printer.replace("keypad","[ {} ]".format(len(self.password)*"-"))
 
     def lock(self):
         self.printer.replace("status","Locking...")
@@ -134,10 +141,10 @@ class Lock:
         self.locked = True
         self.show("lock")
         self.printer.replace("status","Done!")
-    
+
     def unlock(self,attempt):
         if self.is_password_complete_and_correct(attempt.password):
-            attempt.outcome(True)        
+            attempt.outcome(True)
             self.locked = False
             self.printer.replace("status","Unlocking...")
             self.show("unlocked")
@@ -146,7 +153,7 @@ class Lock:
             self.lock()
         else:
             self.printer.replace("status","Wrong password!")
-            
+
             attempt.outcome(False)
             self.failed_attempts += 1
             if self.failed_attempts >= self.attempt_limit:
@@ -157,10 +164,10 @@ class Lock:
             self.show("")
         self.log(str(attempt))
 
-        
-        
-    
-            
+
+
+
+
 
     def log(self,line):
         #print("Writing to log.csv: {}".format(line))
