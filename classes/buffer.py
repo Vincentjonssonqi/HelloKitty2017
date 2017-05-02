@@ -8,10 +8,14 @@ GPIO.setmode(GPIO.BCM)
 
 class Buffer:
 
-    def __init__(self,pins,no_hardware):
+    def __init__(self,pins,control_pin,no_hardware):
         self.pins = pins or []
         self.size = len(self.pins)                                                                  #Buffer size means basically the number of pins, meaning number of bits that can be stored in the buffer
         self.no_hardware = no_hardware or False
+        self.flow_control_pin = control_pin
+        GPIO.setwarnings(False)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.flow_control_pin,GPIO.OUT)
 
     #write-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -24,10 +28,10 @@ class Buffer:
 
 
     def write(self,number):
-
-        buffer_values = self.convert_number_to_buffer(number)                                               #Generate buffer from the number
+        GPIO.output(self.flow_control_pin,True)                                                     #Turn the buffer chip output off so that we do not have conflicting signals on the same wires
+        buffer_values = self.convert_number_to_buffer(number)                                       #Generate buffer from the number
         for i in range(len(buffer_values)):                                                         #LOOP over buffer values
-            pin_id = self.pins[i]                                                                 #fetch the pin id
+            pin_id = self.pins[i]                                                                   #fetch the pin id
             GPIO.setup(pin_id,GPIO.OUT)                                                             #Set the current buffer pin to output mode
             GPIO.output(pin_id,buffer_values[i])                                                    #Write buffer value to
 
@@ -45,7 +49,7 @@ class Buffer:
 
 
     def read(self):
-
+        GPIO.output(self.flow_control_pin,False)                                                    #Turn the the buffer chip on to be able to recieve stuff again
         buffer_values = []                                                                          #Generate buffer from the number
         for i in range(len(self.pins)):                                                             #LOOP over buffer values
             pin_id = self.pins[i]                                                                 	#fetch the pin id
@@ -55,8 +59,8 @@ class Buffer:
             time.sleep(random.randint(0,1))
             fake_value = random.randint(0,8)
             return None if fake_value > 2 else fake_value
-            
-        return self.convert_buffer_to_column(buffer_values) 
+
+        return self.convert_buffer_to_column(buffer_values)
 
 
 

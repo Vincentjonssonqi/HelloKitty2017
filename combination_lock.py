@@ -8,15 +8,17 @@ from classes.printer import Printer
 #CONSTANTS--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 BUFFER_PINS = [11,10,9]
+BUFFER_FLOW_CONTROL_PIN = 14
 BUZZER_PIN = 7
 RED_LED_PIN = 6
 GREEN_LED_PIN = 5
-KEYPAD_KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]]
 ATTEMPT_LIMIT = 3
 DEACTIVATION_DURATION = 5                                                                       #The number of seconds the lock will be deactivated for if an attempt limit is reached
 OPENS_AT = datetime.time(9,0)                                                                   #Opens at 9AM
 CLOSES_AT = datetime.time(9,0)                                                                  #Closes at 17PM
-NO_HARDWARE = True
+NO_REAL_BUFFER = True
+
+ALLOW_MAX_LOCKOUT = True
 
 #GLOBAL VARIABLES------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -48,7 +50,7 @@ def get_password():
 
 def signal_handler(signal, frame):
     printer.replace("status","Preparing to exit")
-    
+
     lock.quit()
     printer.replace("status","Done")
     time.sleep(.2)
@@ -62,6 +64,8 @@ def setup_print_layout():
     printer.add("app","COMBINATION LOCK",True)
     printer.add("about","Enter the unlock code on the keypad, if the code is right, then good for you :)",True)
     printer.add("border_middle","",False)
+    printer.add("lock status","BOOTING...")
+    printer.add("border_middle2","",False)
     printer.add("status","Initilizing..",True)
     printer.add("keypad","[ deactivated ]",True)
     printer.add("margin_bottom","",False)
@@ -73,7 +77,7 @@ def setup_print_layout():
 
 
 def init():
-    
+
     signal.signal(signal.SIGINT, signal_handler)
     setup_print_layout()
     #printer.replace("status","STATUS: test.")
@@ -82,8 +86,20 @@ def init():
     #time.sleep(2)
     #printer.replace("password","password.")
     global lock
-    lock = Lock(printer,get_password(),ATTEMPT_LIMIT,DEACTIVATION_DURATION,OPENS_AT,CLOSES_AT,KEYPAD_KEYS,BUFFER_PINS,BUZZER_PIN,GREEN_LED_PIN,RED_LED_PIN,NO_HARDWARE)
-    lock.boot()
+    lock = Lock(printer)
+
+    lock.init_buffer(BUFFER_PINS,BUFFER_FLOW_CONTROL_PIN,NO_REAL_BUFFER)
+
+    if ALLOW_MAX_LOCKOUT:
+        lock.config_max_lockout(ATTEMPT_LIMIT,DEACTIVATION_DURATION)
+
+    lock.config_time_lockout(OPENS_AT,CLOSES_AT)
+
+    lock.set_password(get_password())
+
+    lock.init_components(BUZZER_PIN,GREEN_LED_PIN,RED_LED_PIN)
+
+    lock.start()
 
 
 

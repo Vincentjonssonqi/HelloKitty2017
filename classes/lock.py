@@ -11,26 +11,40 @@ from .unlockattempt import UnlockAttempt
 class Lock:
 
 
-    def __init__(self,printer,password,attempt_limit,deactivation_duration,opens_at,closes_at,keypad_keys,buffer_pins,buzzer_pin,success_led_pin, error_led_pin,no_hardware):
-        self.printer = printer
+    def __init__(self,printer):
         self.locked = True
-        self.password = password
-        self.attempt_limit = attempt_limit
-        self.deactivation_duration = deactivation_duration
+        self.has_components = False
+        self.has_buffer = False
         self.failed_attempts = 0
+        self.printer = printer
 
-        self.opens_at = datetime.combine(date.min,opens_at) - datetime.min
-        self.closes_at = datetime.combine(date.min,closes_at) - datetime.min
-        self.buffer = Buffer(buffer_pins,no_hardware)
-        self.keypad = Keypad(keypad_keys,self.buffer,self.show)
+
+    def init_buffer(buffer_pins,flow_control_pin,not_real):
+        self.buffer = Buffer(buffer_pins,flow_control_pin,not_real)
+        self.has_buffer = True
+    def init_keypad():
+        if self.has_buffer:
+            self.printer.reaplce("status","You need a buffer for the keypad, make sure you initilize it before you init the keypad")
+        self.keypad = Keypad([["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]],self.buffer,self.show)
+
+    def init_components(buzzer_pin,success_led_pin,error_led_pin):
+        if not self.has_buffer:
+            self.printer.replace("status","Need to initilize buffer before you do this mate")
 
         self.buzzer = Buzzer(buzzer_pin,self.buffer)
-
         self.success_led = Led("red",success_led_pin,self.buffer)
         self.error_led = Led("green",error_led_pin,self.buffer)
+        self.has_components = True
 
-        self.log("{},{},{}".format(datetime.now().isoformat(),0,"Start"))
+    def set_password(password):
+        self.password = password
+    def config_max_lockout(attempt_limit,deactivation_duration):
+        self.attempt_limit = attempt_limit
+        self.deactivation_duration = deactivation_duration
 
+    def config_time_lockout(opens_at,closes_at):
+        self.opens_at = datetime.combine(date.min,opens_at) - datetime.min
+        self.closes_at = datetime.combine(date.min,closes_at) - datetime.min
 
     #init_event_loop--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -38,7 +52,8 @@ class Lock:
         #Initilizes the loop that listens on pins and decides what events to trigger
 
 
-    def boot(self):
+    def start(self):
+        self.log("{},{},{}".format(datetime.now().isoformat(),0,"Start"))
         attempt = None
         while True:
             seconds_to_open = self.is_open()
@@ -58,10 +73,12 @@ class Lock:
             self.update_password_line(attempt.password,False)
             self.password_line_timer = Timer(1.0,self.update_password_line,(attempt.password,True))
             self.password_line_timer.start()
+            #This solution only only
+            #if self.is_password_complete(attempt.password):
+            #    self.unlock(attempt)
+            #    attempt = None
 
-            if self.is_password_complete(attempt.password):
-                self.unlock(attempt)
-                attempt = None
+            #
 
 
 
@@ -110,6 +127,8 @@ class Lock:
         #
     def show(self,state):
         #print(state)
+        if not self.has_components:
+            self.printer.replace("status","There are no initilized components so I cannot show any state live")
         if state == "unlocked":
             self.buzzer.on()
             self.success_led.on()
@@ -133,23 +152,23 @@ class Lock:
             self.printer.replace("status","Keypad deactivated: [{0}{1}] {2}s remaining".format((40- progress)*"=",progress*" ",countdown))
             time.sleep(1)
             countdown -= 1
-        self.printer.replace("status","Keypad activated")
+        self.printer.replace("status","Activated keypad")
 
     def lock(self):
-        self.printer.replace("status","Locking...")
+        self.printer.replace("status","Wait for user input...")
         self.failed_attempts = 0
         self.locked = True
         self.show("lock")
-        self.printer.replace("status","Done!")
+        self.printer.replace("lock status","LOCKED")
 
     def unlock(self,attempt):
         if self.is_password_complete_and_correct(attempt.password):
+            self.printer.replace("status","Password was correct!")
             attempt.outcome(True)
             self.locked = False
-            self.printer.replace("status","Unlocking...")
+            self.printer.replace("lock status","UNLOCKED")
             self.show("unlocked")
-            self.printer.replace("status","Done!")
-            self.deactivate(5)
+            self.deactivate(3)
             self.lock()
         else:
             self.printer.replace("status","Wrong password!")
