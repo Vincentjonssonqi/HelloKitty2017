@@ -12,10 +12,10 @@ BUZZER_PIN = 7
 RED_LED_PIN = 6
 GREEN_LED_PIN = 5
 KEYPAD_KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]]
-ATTEMPT_LIMIT = 10
-DEACTIVATION_DURATION = 5                                                                      #The number of seconds the lock will be deactivated for if an attempt limit is reached
+ATTEMPT_LIMIT = 3
+DEACTIVATION_DURATION = 5                                                                       #The number of seconds the lock will be deactivated for if an attempt limit is reached
 OPENS_AT = datetime.time(9,0)                                                                   #Opens at 9AM
-CLOSES_AT = datetime.time(9,0)                                                             #Closes at 17PM
+CLOSES_AT = datetime.time(9,0)                                                                  #Closes at 17PM
 NO_HARDWARE = True
 
 #GLOBAL VARIABLES------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -56,10 +56,16 @@ def signal_handler(signal, frame):
     sys.exit(1)
 
 def setup_print_layout():
-    printer.add("title","PROGRAM: COMBINATION LOCK")
-    printer.add("subtitle","DESCRIPTION: Enter code on keypad")
-    printer.add("password","PASSWORD: []")
-    printer.add("status","STATUS: Initilizing..")
+    print("\n\n\n")
+    printer.add("border_top","------------------------------------------------------------------------------------------------------------",False)
+    printer.add("margin_top","",False)
+    printer.add("app","COMBINATION LOCK",True)
+    printer.add("about","Enter the unlock code on the keypad, if the code is right, then good for you :)",True)
+    printer.add("border_middle","",False)
+    printer.add("status","Initilizing..",True)
+    printer.add("keypad","[ deactivated ]",True)
+    printer.add("margin_bottom","",False)
+    printer.add("border_bottom","------------------------------------------------------------------------------------------------------------",False)
 #init--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description

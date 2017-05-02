@@ -48,14 +48,14 @@ class Lock:
             key = self.keypad.next_key()
             if not attempt:
                 attempt = UnlockAttempt()
-                self.printer.replace("status","STATUS: Attempt {0}".format(self.failed_attempts))
+                self.printer.replace("status","Attempt {0}".format(self.failed_attempts + 1))
 
             attempt.password += key
             
             stars = (len(attempt.password) - 1 )*"*"
             key = attempt.password[len(attempt.password)-1]
             dashes = (len(self.password) - len(attempt.password))*"-"
-            self.printer.replace("password","PASSWORD [ {0}{1}{2} ]".format(stars,key,dashes))
+            self.printer.replace("keypad","[ {0}{1}{2} ]".format(stars,key,dashes))
             
             if self.is_password_complete(attempt.password):
                 self.unlock(attempt)
@@ -119,32 +119,34 @@ class Lock:
 
     def deactivate(self,duration):
         countdown = duration
+        self.printer.replace("keypad","[ deactivated ]")
         while countdown >= 0:
             progress = int(50*(1-(float(countdown)/float(duration))))
-            #print(float(countdown)/float(duration),1-(countdown/duration),50*(1-(countdown/duration)),countdown,duration)
-            self.printer.replace("status","STATUS: Keypad deactivated: [{0}{1}] {2}s remaining".format((50- progress)*"=",progress*" ",countdown))
+            self.printer.replace("status","Keypad deactivated: [{0}{1}] {2}s remaining".format((50- progress)*"=",progress*" ",countdown))
             time.sleep(1)
             countdown -= 1
-        self.printer.replace("status","STATUS: Keypad activated")
+        self.printer.replace("status","Keypad activated")
+        self.printer.replace("keypad","[ {} ]".format(len(self.password)*"-"))
 
     def lock(self):
-        self.printer.replace("status","STATUS: Locking...")
+        self.printer.replace("status","Locking...")
         self.failed_attempts = 0
         self.locked = True
         self.show("lock")
-        self.printer.replace("status","STATUS: Done!")
+        self.printer.replace("status","Done!")
     
     def unlock(self,attempt):
         if self.is_password_complete_and_correct(attempt.password):
             attempt.outcome(True)        
             self.locked = False
-            self.printer.replace("status","STATUS: Unlocking...")
+            self.printer.replace("status","Unlocking...")
             self.show("unlocked")
-            self.printer.replace("status","STATUS: Done!")
+            self.printer.replace("status","Done!")
             self.deactivate(5)
             self.lock()
         else:
-            self.printer.replace("status","STATUS: Wrong password!")
+            self.printer.replace("status","Wrong password!")
+            
             attempt.outcome(False)
             self.failed_attempts += 1
             if self.failed_attempts >= self.attempt_limit:
@@ -162,7 +164,7 @@ class Lock:
 
     def log(self,line):
         #print("Writing to log.csv: {}".format(line))
-        self.printer.replace("status","STATUS: Updating logs..")
+        self.printer.replace("status","Updating logs..")
         need_titles = not os.path.isfile('logs.csv')
         attempt_log_file = open("logs.csv","a")
         if need_titles:
@@ -174,7 +176,7 @@ class Lock:
     def quit(self):
         lock.lock()
         #run command line program that generates graph
-        self.printer.replace("status","STATUS: Generating graph of Access Times...")
+        self.printer.replace("status","Generating graph of Access Times...")
         last_log = "{},{},{}".format(datetime.now().isoformat(),0,"Shut down")
-        self.printer.replace("status","STATUS: Saving when the lock was shut down...")
+        self.printer.replace("status","Saving when the lock was shut down...")
         self.log(last_log)
