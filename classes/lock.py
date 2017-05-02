@@ -10,7 +10,6 @@ from .led import Led
 from .unlockattempt import UnlockAttempt
 class Lock:
 
-
     def __init__(self,printer):
         self.locked = True
         self.has_components = False

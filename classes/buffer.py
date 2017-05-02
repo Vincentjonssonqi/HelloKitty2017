@@ -16,6 +16,7 @@ class Buffer:
         self.clock_pin = clock_pin
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
+        
         GPIO.setup(self.buffer_disable_pin,GPIO.OUT)
         GPIO.setup(self.clock_pin,GPIO.OUT)
 
