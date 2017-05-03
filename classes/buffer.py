@@ -3,22 +3,19 @@ import time
 import random
 
 
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-
 class Buffer:
 
-    def __init__(self,pins,buffer_disable_pin,clock_pin,no_hardware):
+    def __init__(self,pins,buffer_control_pin,register_control_pin,no_hardware):
         self.pins = pins or []
         self.size = len(self.pins)                                                                  #Buffer size means basically the number of pins, meaning number of bits that can be stored in the buffer
         self.no_hardware = no_hardware or False
-        self.buffer_disable_pin = buffer_disable_pin
-        self.clock_pin = clock_pin
+        self.buffer_control_pin = buffer_control_pin
+        self.register_control_pin = register_control_pin
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
-        
-        GPIO.setup(self.buffer_disable_pin,GPIO.OUT)
-        GPIO.setup(self.clock_pin,GPIO.OUT)
+
+        GPIO.setup(self.buffer_control_pin,GPIO.OUT)
+        GPIO.setup(self.register_control_pin,GPIO.OUT)
 
     #write-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -31,19 +28,23 @@ class Buffer:
 
 
     def write(self,number):
-        GPIO.output(self.buffer_disable_pin,True)
+        #Turn the buffer off so that we do not have conflicting signals on the pins
+        self.enable_buffer(False)
         time.sleep(.1)
-
-        buffer_values = self.convert_number_to_buffer(number)                                       #Generate buffer from the number
-        for i in range(len(buffer_values)):                                                         #LOOP over buffer values
-            pin_id = self.pins[i]                                                                   #fetch the pin id
+        #Generate buffer from the number
+        buffer_values = self.convert_number_to_buffer(number)
+        #LOOP over buffer values
+        for i in range(len(self.pins)):
+            #fetch the pin id
+            pin_id = self.pins[i]
+            #Set the current buffer pin to output mode and set these pins to their corresponding value
             GPIO.setup(pin_id,GPIO.OUT)
-        GPIO.output(self.clock_pin,True)
-        time.sleep(.1)
-        self.clock()                                                         #Set the current buffer pin to output mode
-        for i in range(len(buffer_values)):
             GPIO.output(pin_id,buffer_values[i])
-        print("WRITE OP value: {},code: {}".format(buffer_values,number))                                                    #Write buffer value to
+
+        time.sleep(.1)
+        self.clock_register()
+
+        print("WRITE OP value: {},code: {}".format(buffer_values,number))
 
 
 
@@ -59,24 +60,39 @@ class Buffer:
 
 
     def read(self):
-                                                            #Turn the the buffer chip on to be able to recieve stuff again
+
+        self.enable_register(False)
+        time.sleep(.1)
+                                                      #Turn the the buffer chip on to be able to recieve stuff again
         buffer_values = []                                                                          #Generate buffer from the number
         for i in range(len(self.pins)):                                                             #LOOP over buffer values
             pin_id = self.pins[i]                                                                 	#fetch the pin id
             GPIO.setup(pin_id,GPIO.IN)
+
+        self.enable_buffer(True)
         time.sleep(.1)
-        GPIO.output(self.buffer_disable_pin,False)                                                             #Set the current buffer pin to output mode
 
         for i in range(len(self.pins)):
             buffer_values.append(GPIO.input(pin_id))
+
+
+
+
         if self.no_hardware:
             time.sleep(random.randint(0,1))
             fake_value = random.randint(0,8)
             return None if fake_value > 2 else fake_value
+
         print(buffer_values)
         return self.convert_buffer_to_column(buffer_values)
 
 
+
+
+    def enable_buffer(enable):
+        GPIO.output(self.buffer_control_pin,not enable)
+    def enable_register(enable):
+        GPIO.output(self.register_control_pin,enable)
 
     #convert_number_to_buffer-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -90,10 +106,13 @@ class Buffer:
     #Buffer values in the form of a List<boolean>
 
 
-    def clock (self):
-        GPIO.output(self.clock_pin,False)
-        GPIO.output(self.clock_pin,True)
-        GPIO.output(self.clock_pin,False)
+    def clock_register (self):
+        self.enable_register(False)
+        time.sleep(.1)
+        self.enable_register(True)
+        time.sleep(.1)
+        self.enable_register(False)
+
     def convert_number_to_buffer(self,number):
 
 
