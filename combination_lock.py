@@ -14,12 +14,22 @@ BUZZER_PIN = 7
 RED_LED_PIN = 6
 GREEN_LED_PIN = 5
 ATTEMPT_LIMIT = 3
-DEACTIVATION_DURATION = 5                                                                       #The number of seconds the lock will be deactivated for if an attempt limit is reached
-OPENS_AT = datetime.time(9,0)                                                                   #Opens at 9AM
-CLOSES_AT = datetime.time(9,0)                                                                  #Closes at 17PM
-NO_REAL_BUFFER = False
+#The number of seconds the lock will be deactivated for if an attempt limit is reached
+DEACTIVATION_DURATION = 5
+#Opens at 9AM
+OPENS_AT = datetime.time(9,0)
+ #Closes at 21PM
+CLOSES_AT = datetime.time(21,0)
+
 
 ALLOW_MAX_LOCKOUT = True
+#If you wish to try the code without the actual keypad you make this True, and random keys will be entered at random time intervals
+NO_REAL_BUFFER = False
+#This value is used to configure the lock to be vulnerable to a side channel attack
+ENABLE_SIDE_CHANNEL_ATTACK = False
+#Can be either polling or interupt
+KEYPAD_TYPE = "polling"
+KEYPAD_KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]]
 
 #GLOBAL VARIABLES------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -35,15 +45,17 @@ printer = Printer()
 
 def get_password():
     pswrd = ""
-    try:                                                                                        #We use a try here to avoid a crash if the file does not exists
-        password_file = open("password.txt","r")                                                #Load the password.txt file into memory
-        pswrd = password_file.read()                                                            #Store the content of the file into the password variable
-    except FileNotFoundError:                                                                   #Except FileNotFoundError as the file might not exist
-        pswrd = "1234"                                                                          #Assign initial default password
+    try:
+        #We use a try here to avoid a crash if the file does not exists
+        #Load the password.txt file into memory
+        password_file = open("password.txt","r")
+        #Store the content of the file into the password variable
+        return password_file.read()
+    except FileNotFoundError:
+        #Except FileNotFoundError as the file might not exist
+        #Assign initial default password
+        return "1234"
         print("error")
-    finally:
-        return pswrd
-        print(pswrd)
 
 
 
@@ -86,10 +98,10 @@ def init():
     #time.sleep(2)
     #printer.replace("password","password.")
     global lock
-    lock = Lock(printer)
-
+    lock = Lock(,printer)
+    lock.config_security(ENABLE_SIDE_CHANNEL_ATTACK)
     lock.init_buffer(BUFFER_PINS,BUFFER_DISABLE_PIN,BUFFER_CLOCK_PIN,NO_REAL_BUFFER)
-    lock.init_keypad()
+    lock.init_keypad(KEYPAD_TYPE,KEYPAD_KEYS)
     if ALLOW_MAX_LOCKOUT:
         lock.config_max_lockout(ATTEMPT_LIMIT,DEACTIVATION_DURATION)
 

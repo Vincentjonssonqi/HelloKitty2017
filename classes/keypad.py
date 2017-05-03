@@ -50,12 +50,12 @@ class Keypad:
 
 
     def poll_row(self,row):
-        print(row)
+        #print(row)
         self.buffer.write(row)
         column = self.buffer.read()
-        #if column != None:
-        #    self.event_cb("key_down")
-        #    return self.poll_key(row,column)
+        if column != None:
+            self.event_cb("key_down")
+            return self.poll_key(row,column)
         return None;
 
 
@@ -73,4 +73,5 @@ class Keypad:
             next_column = self.buffer.read()
         self.event_cb("key_up")
         #print("column {}, row {}".format(column,row))
+        #print(self.keys[row][column])
         return self.keys[row][column]

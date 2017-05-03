@@ -10,8 +10,9 @@ from .led import Led
 from .unlockattempt import UnlockAttempt
 class Lock:
 
-    def __init__(self,printer):
+    def __init__(self,enable_side_channel,printer):
         self.locked = True
+        self.enable_side_channel = enable_side_channel
         self.has_components = False
         self.has_buffer = False
         self.failed_attempts = 0
@@ -21,10 +22,11 @@ class Lock:
     def init_buffer(self,buffer_pins,buffer_disable_pin,clock_pin,not_real):
         self.buffer = Buffer(buffer_pins,buffer_disable_pin,clock_pin,not_real)
         self.has_buffer = True
-    def init_keypad(self):
+
+    def init_keypad(self,type,keys):
         if self.has_buffer:
             self.printer.replace("status","You need a buffer for the keypad, make sure you initilize it before you init the keypad")
-        self.keypad = Keypad([["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]],self.buffer,self.show)
+        self.keypad = Keypad(keys,self.buffer,self.show)
 
     def init_components(self,buzzer_pin,success_led_pin,error_led_pin):
         if not self.has_buffer:
@@ -37,6 +39,7 @@ class Lock:
 
     def set_password(self,password):
         self.password = password
+
     def config_max_lockout(self,attempt_limit,deactivation_duration):
         self.attempt_limit = attempt_limit
         self.deactivation_duration = deactivation_duration
@@ -77,7 +80,8 @@ class Lock:
             #    self.unlock(attempt)
             #    attempt = None
 
-            #
+            #Side channel attack solution
+
 
 
 

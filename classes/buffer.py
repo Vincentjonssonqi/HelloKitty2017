@@ -30,7 +30,7 @@ class Buffer:
     def write(self,number):
         #Turn the buffer off so that we do not have conflicting signals on the pins
         self.enable_buffer(False)
-        time.sleep(.1)
+        time.sleep(.01)
         #Generate buffer from the number
         buffer_values = self.convert_number_to_buffer(number)
         #LOOP over buffer values
@@ -40,11 +40,11 @@ class Buffer:
             #Set the current buffer pin to output mode and set these pins to their corresponding value
             GPIO.setup(pin_id,GPIO.OUT)
             GPIO.output(pin_id,buffer_values[i])
-
-        time.sleep(.1)
+        #print("WRITE OP value: {},code: {}".format(buffer_values,number))
+        time.sleep(.01)
         self.clock_register()
 
-        print("WRITE OP value: {},code: {}".format(buffer_values,number))
+
 
 
 
@@ -62,7 +62,7 @@ class Buffer:
     def read(self):
 
         self.enable_register(False)
-        time.sleep(.1)
+        time.sleep(.01)
                                                       #Turn the the buffer chip on to be able to recieve stuff again
         buffer_values = []                                                                          #Generate buffer from the number
         for i in range(len(self.pins)):                                                             #LOOP over buffer values
@@ -70,9 +70,10 @@ class Buffer:
             GPIO.setup(pin_id,GPIO.IN)
 
         self.enable_buffer(True)
-        time.sleep(.1)
+        time.sleep(.01)
 
         for i in range(len(self.pins)):
+            pin_id = self.pins[i]
             buffer_values.append(GPIO.input(pin_id))
 
 
@@ -83,15 +84,17 @@ class Buffer:
             fake_value = random.randint(0,8)
             return None if fake_value > 2 else fake_value
 
-        print(buffer_values)
+        #print(buffer_values)
         return self.convert_buffer_to_column(buffer_values)
 
 
 
 
-    def enable_buffer(enable):
+    def enable_buffer(self,enable):
+        #print("enable buffer: {} pin: {}".format(enable,self.buffer_control_pin))
         GPIO.output(self.buffer_control_pin,not enable)
-    def enable_register(enable):
+    def enable_register(self,enable):
+        #print("enable register: {} pin: {}".format(enable,self.register_control_pin))
         GPIO.output(self.register_control_pin,enable)
 
     #convert_number_to_buffer-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -108,9 +111,9 @@ class Buffer:
 
     def clock_register (self):
         self.enable_register(False)
-        time.sleep(.1)
+        time.sleep(.01)
         self.enable_register(True)
-        time.sleep(.1)
+        time.sleep(.01)
         self.enable_register(False)
 
     def convert_number_to_buffer(self,number):
