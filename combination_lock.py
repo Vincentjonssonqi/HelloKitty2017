@@ -4,7 +4,7 @@ import sys
 import datetime
 from classes.lock import Lock
 from classes.printer import Printer
-
+import RPi.GPIO as GPIO
 #CONSTANTS--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 BUFFER_PINS = [11,10,9]
@@ -67,6 +67,7 @@ def signal_handler(signal, frame):
     printer.replace("status","Done")
     time.sleep(.2)
     printer.replace("status","Good bye Mike! If you happen to be anybody else then we are in a bit of tought situation. You see this is message will always be the same. Soo.. either you change your name or you have have to remember not to read this last message on exit.")
+    GPIO.cleanup()
     sys.exit(1)
 
 def setup_print_layout():

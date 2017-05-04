@@ -17,6 +17,16 @@ class Buffer:
         GPIO.setup(self.buffer_control_pin,GPIO.OUT)
         GPIO.setup(self.register_control_pin,GPIO.OUT)
 
+
+
+    #start_interupt
+
+    def start_interupt():
+        for i in len(self.pins):
+            GPIO.setup(self.pins[i], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.add_event_detect(self.pins[i], GPIO.FALLING, callback=interupt_callback, bouncetime=300)
+    def interupt_callback(pinId):
+        GPIO.remove_event_detect(pinId)
     #write-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description

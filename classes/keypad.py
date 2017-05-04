@@ -2,7 +2,7 @@ import time
 class Keypad:
     def __init__(self,keys,keypad_type,buffer,cb):
         self.keys = keys
-        self.keypad_type = keypad_type or "polling"
+        self.use_interupt = keypad_type == "interupt"
         self.event_cb = cb
         self.buffer = buffer
 
@@ -17,11 +17,14 @@ class Keypad:
 
     #Returns:
     #A string with the pressed key's face value.
-    def next_key(self):
-        while True:
-            key = self.poll_keypad()
-            if key:
-                return key
+    def next_key(self,cb):
+        if self.use_interupt:
+            self.start_keypad_interupt(cb)
+        else:
+            while True:
+                key = self.poll_keypad()
+                if key:
+                    return key
 
     #start_keypad_interupt
 
@@ -31,9 +34,16 @@ class Keypad:
     #only have to poll the keypad when a person is actually pressing a key
 
     #returns:
-    #None or the key value (String
-    def start_keypad_interupt(self):
-        #We start of by writing high 
+    #None or the key value (String)
+
+    def start_keypad_interupt(self,cb):
+        #We start of by writing switching the keypad state to interupt mode
+        #This basically mean that we ensure that we drive a 0 onto all rows at the same time always
+        #At least until we detect a key press
+        #When that happens the interupt should be triggered and we perform the same polling as before
+        #The advantage of this is that we do not poll all the time, only when the user is actually
+        #interacting with the keypad
+
     #poll_keypad----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description:
