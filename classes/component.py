@@ -11,7 +11,7 @@ class Component:
 
     def on(self):
         if self.is_on is not True:
-            self.buffer.write(self.command)
+            self.clock()
             self.is_on = True
     #off--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -20,9 +20,11 @@ class Component:
 
     def off(self):
         if self.is_on is True:
-            self.buffer.write(self.command)
+            self.clock()
             self.is_on = False
-
+    def clock(self):
+        self.buffer.write(self.command)
+        self.buffer.write(self.buffer.neutral_command)
     #toggle--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description:

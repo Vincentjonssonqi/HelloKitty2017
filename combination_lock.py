@@ -10,7 +10,8 @@ import RPi.GPIO as GPIO
 BUFFER_PINS = [11,10,9]
 BUFFER_DISABLE_PIN = 15
 BUFFER_CLOCK_PIN = 14
-BUZZER_PIN = 7
+BUFFER_NEUTRAL_COMMAND = 0
+BUZZER_PIN = 4
 RED_LED_PIN = 6
 GREEN_LED_PIN = 5
 ATTEMPT_LIMIT = 3
@@ -19,7 +20,7 @@ DEACTIVATION_DURATION = 5
 #Opens at 9AM
 OPENS_AT = datetime.time(9,0)
  #Closes at 21PM
-CLOSES_AT = datetime.time(21,0)
+CLOSES_AT = datetime.time(9,0)
 
 
 ALLOW_MAX_LOCKOUT = True
@@ -31,18 +32,11 @@ ENABLE_SIDE_CHANNEL_ATTACK = False
 KEYPAD_TYPE = "polling"
 KEYPAD_KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]]
 
+
 #GLOBAL VARIABLES------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 lock = None
 printer = Printer()
-
-#get_password------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    #Description:
-    #Loads password combination string from password.txt
-    #or set password variable to the default pass to "1234"
-
-
 def get_password():
     pswrd = ""
     try:
@@ -77,9 +71,9 @@ def setup_print_layout():
     printer.add("app","COMBINATION LOCK",True)
     printer.add("about","Enter the unlock code on the keypad, if the code is right, then good for you :)",True)
     printer.add("border_middle","",False)
-    printer.add("lock status","BOOTING...",True)
+    printer.add("status","BOOTING...",True)
     printer.add("border_middle2","",False)
-    printer.add("status","Initilizing..",True)
+    printer.add("logs","Initilizing..",True)
     printer.add("keypad","[ deactivated ]",True)
     printer.add("margin_bottom","",False)
     printer.add("border_bottom","------------------------------------------------------------------------------------------------------------",False)
@@ -99,7 +93,7 @@ def init():
     global lock
     lock = Lock(ENABLE_SIDE_CHANNEL_ATTACK,printer)
 
-    lock.init_buffer(BUFFER_PINS,BUFFER_DISABLE_PIN,BUFFER_CLOCK_PIN,NO_REAL_BUFFER)
+    lock.init_buffer(BUFFER_PINS,BUFFER_DISABLE_PIN,BUFFER_CLOCK_PIN,BUFFER_NEUTRAL_COMMAND,NO_REAL_BUFFER)
     lock.init_keypad(KEYPAD_TYPE,KEYPAD_KEYS)
     lock.init_components(BUZZER_PIN,GREEN_LED_PIN,RED_LED_PIN)
     lock.config_time_lockout(OPENS_AT,CLOSES_AT)

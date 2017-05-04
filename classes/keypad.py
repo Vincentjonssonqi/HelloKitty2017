@@ -31,6 +31,7 @@ class Keypad:
     #only have to poll the keypad when a person is actually pressing a key
 
     def start_keypad_interupt(self,cb):
+        print("stared interupt")
         #We start of by writing switching the keypad state to interupt mode
         #This basically mean that we ensure that we drive a 0 onto all rows at the same time always
         #At least until we detect a key press
@@ -40,7 +41,7 @@ class Keypad:
         for i in len(self.pins):
             GPIO.add_event_detect(self.pins[i], GPIO.FALLING, callback=lambda pin: self.interupt_callback(pin,cb))
 
-    def interupt_callback(pinId,cb):
+    def interupt_callback(self,pinId,cb):
         for i in len(self.pins):
             GPIO.remove_event_detect(self.pins[i])
         print(pinId)
@@ -52,7 +53,7 @@ class Keypad:
             raise ValueError("Thekey should have been detected")
 
 
-    def start_keypad_polling(cb):
+    def start_keypad_polling(self,cb):
         while True:
             key = self.check_keypad()
             if key:
@@ -69,6 +70,7 @@ class Keypad:
     def check_keypad(self):
         for row in range(4):
             key = self.poll_row(row)
+
             if key:
                 return key
         return None
@@ -86,6 +88,7 @@ class Keypad:
     def poll_row(self,row):
         #print(row)
         self.buffer.write(row)
+        time.sleep(20)
         column = self.buffer.read()
         if column != None:
             self.event_cb("key_down")
