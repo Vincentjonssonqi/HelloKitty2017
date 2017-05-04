@@ -15,6 +15,7 @@ class Lock:
         self.enable_side_channel = enable_side_channel
         self.has_components = False
         self.has_buffer = False
+        self.is_vulnerable = False
         self.failed_attempts = 0
         self.printer = printer
         self.password_line_timer = None
@@ -23,10 +24,10 @@ class Lock:
         self.buffer = Buffer(buffer_pins,buffer_disable_pin,clock_pin,not_real)
         self.has_buffer = True
 
-    def init_keypad(self,type,keys):
+    def init_keypad(self,keypad_type,keys):
         if self.has_buffer:
             self.printer.replace("status","You need a buffer for the keypad, make sure you initilize it before you init the keypad")
-        self.keypad = Keypad(keys,self.buffer,self.show)
+        self.keypad = Keypad(keypad_type,keys,self.buffer,self.show)
 
     def init_components(self,buzzer_pin,success_led_pin,error_led_pin):
         if not self.has_buffer:
@@ -47,7 +48,8 @@ class Lock:
     def config_time_lockout(self,opens_at,closes_at):
         self.opens_at = datetime.combine(date.min,opens_at) - datetime.min
         self.closes_at = datetime.combine(date.min,closes_at) - datetime.min
-
+    def config_security(self,is_vulnerable):
+        self.is_vulnerable = is_vulnerable
     #init_event_loop--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
         #Description
@@ -75,12 +77,16 @@ class Lock:
             self.update_password_line(attempt.password,False)
             self.password_line_timer = Timer(1.0,self.update_password_line,(attempt.password,True))
             self.password_line_timer.start()
-            #This solution only only
-            #if self.is_password_complete(attempt.password):
-            #    self.unlock(attempt)
-            #    attempt = None
+            #Tries to unlock the safe on every key entery when is_vulnerable is set to True
+            #This functionality exists so that we candemmonstrate the side channel attack
+            #If is_vulnerable is set to False, the lock will only evaluate the code
+            3once the attempted password is the same size as the actual password
+            if self.is_vulnerable or self.is_password_complete(attempt.password):
+                result = self.unlock(attempt)
+                attempt = attempt if result == 0 else None
 
-            #Side channel attack solution
+
+
 
 
 
@@ -143,7 +149,8 @@ class Lock:
             self.error_led.on()
         else:
             self.buzzer.off()
-            self.success_led.off()
+            #This will turn off automatically with the multi vibrator thingy :P
+            #self.success_led.off()
             self.error_led.off()
 
 
@@ -173,9 +180,12 @@ class Lock:
             self.show("unlocked")
             self.deactivate(3)
             self.lock()
+            self.log(str(attempt))
+            return 1
+        elif self.is_password_correct(attempt.password):
+            return 0
         else:
             self.printer.replace("status","Wrong password!")
-
             attempt.outcome(False)
             self.failed_attempts += 1
             if self.failed_attempts >= self.attempt_limit:
@@ -184,7 +194,9 @@ class Lock:
             self.show("error")
             self.deactivate(10)
             self.show("")
-        self.log(str(attempt))
+            self.log(str(attempt))
+            return -1
+
 
 
 

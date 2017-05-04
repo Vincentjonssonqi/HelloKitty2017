@@ -1,7 +1,8 @@
 import time
 class Keypad:
-    def __init__(self,keys,buffer,cb):
+    def __init__(self,keys,keypad_type,buffer,cb):
         self.keys = keys
+        self.keypad_type = keypad_type or "polling"
         self.event_cb = cb
         self.buffer = buffer
 
@@ -22,14 +23,24 @@ class Keypad:
             if key:
                 return key
 
+    #start_keypad_interupt
 
+    #Description:
+    #Asks the pi to call the poll_keypad function when an active column is detected
+    #The difference between this and constantly polling is that you save a lot of resources when you
+    #only have to poll the keypad when a person is actually pressing a key
+
+    #returns:
+    #None or the key value (String
+    def start_keypad_interupt(self):
+        #We start of by writing high 
     #poll_keypad----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description:
     #Goes through all rows and checks if a key is pressed
 
     #Returns:
-    #None or the column id (Interger)
+    #None or the key value (String)
 
 
     def poll_keypad(self):

@@ -90,26 +90,24 @@ def setup_print_layout():
 
 def init():
 
-    signal.signal(signal.SIGINT, signal_handler)
+
     setup_print_layout()
-    #printer.replace("status","STATUS: test.")
-    #time.sleep(2)
-    #printer.replace("title","Title2.")
-    #time.sleep(2)
-    #printer.replace("password","password.")
+    signal.signal(signal.SIGINT, signal_handler)
+
+
     global lock
-    lock = Lock(,printer)
-    lock.config_security(ENABLE_SIDE_CHANNEL_ATTACK)
+    lock = Lock(ENABLE_SIDE_CHANNEL_ATTACK,printer)
+
     lock.init_buffer(BUFFER_PINS,BUFFER_DISABLE_PIN,BUFFER_CLOCK_PIN,NO_REAL_BUFFER)
     lock.init_keypad(KEYPAD_TYPE,KEYPAD_KEYS)
-    if ALLOW_MAX_LOCKOUT:
-        lock.config_max_lockout(ATTEMPT_LIMIT,DEACTIVATION_DURATION)
-
+    lock.init_components(BUZZER_PIN,GREEN_LED_PIN,RED_LED_PIN)
     lock.config_time_lockout(OPENS_AT,CLOSES_AT)
-
+    lock.config_security(ENABLE_SIDE_CHANNEL_ATTACK)
     lock.set_password(get_password())
 
-    lock.init_components(BUZZER_PIN,GREEN_LED_PIN,RED_LED_PIN)
+
+    if ALLOW_MAX_LOCKOUT:
+        lock.config_max_lockout(ATTEMPT_LIMIT,DEACTIVATION_DURATION)
 
     lock.start()
 
