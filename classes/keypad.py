@@ -17,14 +17,11 @@ class Keypad:
 
     #Returns:
     #A string with the pressed key's face value.
-    def next_key(self,cb):
+    def on_key(self,cb):
         if self.use_interupt:
             self.start_keypad_interupt(cb)
         else:
-            while True:
-                key = self.poll_keypad()
-                if key:
-                    return key
+            self.start_keypad_polling(cb)
 
     #start_keypad_interupt
 
@@ -33,9 +30,6 @@ class Keypad:
     #The difference between this and constantly polling is that you save a lot of resources when you
     #only have to poll the keypad when a person is actually pressing a key
 
-    #returns:
-    #None or the key value (String)
-
     def start_keypad_interupt(self,cb):
         #We start of by writing switching the keypad state to interupt mode
         #This basically mean that we ensure that we drive a 0 onto all rows at the same time always
@@ -43,7 +37,26 @@ class Keypad:
         #When that happens the interupt should be triggered and we perform the same polling as before
         #The advantage of this is that we do not poll all the time, only when the user is actually
         #interacting with the keypad
+        for i in len(self.pins):
+            GPIO.add_event_detect(self.pins[i], GPIO.FALLING, callback=lambda pin: self.interupt_callback(pin,cb))
 
+    def interupt_callback(pinId,cb):
+        for i in len(self.pins):
+            GPIO.remove_event_detect(self.pins[i])
+        print(pinId)
+        key = self.check_keypad()
+        if key:
+            cb(key)
+            self.start_keypad_interupt(cb)
+        else:
+            raise ValueError("Thekey should have been detected")
+
+
+    def start_keypad_polling(cb):
+        while True:
+            key = self.check_keypad()
+            if key:
+                cb(key)
     #poll_keypad----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description:
@@ -53,7 +66,7 @@ class Keypad:
     #None or the key value (String)
 
 
-    def poll_keypad(self):
+    def check_keypad(self):
         for row in range(4):
             key = self.poll_row(row)
             if key:

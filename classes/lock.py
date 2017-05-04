@@ -58,34 +58,35 @@ class Lock:
 
     def start(self):
         self.log("{},{},{}".format(datetime.now().isoformat(),0,"Start"))
-        attempt = None
-        while True:
-            seconds_to_open = self.is_open()
-            if seconds_to_open > 0:
-                self.deactivate(seconds_to_open)
-
-            key = self.keypad.next_key()
-
-            if not attempt:
-                attempt = UnlockAttempt()
-                self.printer.replace("status","Attempt {0}".format(self.failed_attempts + 1))
-
-            attempt.password += key
-
-            if self.password_line_timer:
-                self.password_line_timer.cancel()
-            self.update_password_line(attempt.password,False)
-            self.password_line_timer = Timer(1.0,self.update_password_line,(attempt.password,True))
-            self.password_line_timer.start()
-            #Tries to unlock the safe on every key entery when is_vulnerable is set to True
-            #This functionality exists so that we candemmonstrate the side channel attack
-            #If is_vulnerable is set to False, the lock will only evaluate the code
-            3once the attempted password is the same size as the actual password
-            if self.is_vulnerable or self.is_password_complete(attempt.password):
-                result = self.unlock(attempt)
-                attempt = attempt if result == 0 else None
+        self.attempt = None
+        self.keypad.on_key(self.on_key)
 
 
+
+    def on_key(key):
+        seconds_to_open = self.is_open()
+        if seconds_to_open > 0:
+            self.deactivate(seconds_to_open)
+            return
+            
+        if not self.attempt:
+            self.attempt = UnlockAttempt()
+            self.printer.replace("status","Attempt {0}".format(self.failed_attempts + 1))
+
+        self.attempt.password += key
+
+        if self.password_line_timer:
+            self.password_line_timer.cancel()
+        self.update_password_line(self.attempt.password,False)
+        self.password_line_timer = Timer(1.0,self.update_password_line,(self.attempt.password,True))
+        self.password_line_timer.start()
+        #Tries to unlock the safe on every key entery when is_vulnerable is set to True
+        #This functionality exists so that we candemmonstrate the side channel attack
+        #If is_vulnerable is set to False, the lock will only evaluate the code
+        #once the attempted password is the same size as the actual password
+        if self.is_vulnerable or self.is_password_complete(self.attempt.password):
+            result = self.unlock(self.attempt)
+            self.attempt = self.attempt if result == 0 else None
 
 
 
