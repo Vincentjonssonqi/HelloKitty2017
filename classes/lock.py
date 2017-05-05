@@ -23,8 +23,8 @@ class Lock:
         self.printer.replace("status","LOCKED")
         self.printer.replace("logs","Created Lock")
 
-    def init_buffer(self,buffer_pins,buffer_disable_pin,clock_pin,neutral_command,interupt_command,not_real):
-        self.buffer = Buffer(buffer_pins,buffer_disable_pin,clock_pin,neutral_command,interupt_command,not_real)
+    def init_buffer(self,buffer_pins,buffer_control_pin,register_control_pin,column_change_pin,neutral_command,interupt_command,not_real):
+        self.buffer = Buffer(buffer_pins,buffer_control_pin,register_control_pin,column_change_pin,neutral_command,interupt_command,not_real)
         self.has_buffer = True
         self.printer.replace("logs","Buffer initilized")
 
@@ -69,10 +69,9 @@ class Lock:
         self.log("{},{},{}".format(datetime.now().isoformat(),0,"Start"))
         self.attempt = None
         while True:
-            key = self.keypad.next
+            key = self.keypad.next_key()
+            self.on_key(key)
         self.printer.replace("logs","Lock is live and waiting for user input!")
-        while True:
-            time.sleep(1)
 
     def on_key(self,key):
         seconds_to_open = self.is_open()

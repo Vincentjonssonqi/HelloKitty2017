@@ -9,7 +9,7 @@ class Keypad:
 
 
     def next_key(self):
-        if self.use_interupt:
+        if self.use_interrupt:
             self.buffer.next_column_change()
         key = None
         while not key:
