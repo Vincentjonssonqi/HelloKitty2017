@@ -13,7 +13,6 @@ class Buffer:
         self.neutral_command = neutral_command
         self.interrupt_command = interrupt_command
 
-
         self.no_hardware = no_hardware or False
         self.buffer_control_pin = buffer_control_pin
         self.register_control_pin = register_control_pin
@@ -40,6 +39,7 @@ class Buffer:
         #We start of by writing switching the keypad state to interupt mode
         self.write(self.interrupt_command)
         time.sleep(.01)
+        self.enable_buffer(True)
         #This basically mean that we ensure that we drive a 0 onto all rows at the same time always
         #At least until we detect a key press
         #When that happens the interupt should be triggered and we perform the same polling as before
@@ -54,7 +54,7 @@ class Buffer:
         except KeyboardInterrupt:
             GPIO.cleanup()
 
-    
+
 
     #write-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -71,7 +71,8 @@ class Lock:
         while True:
             key = self.keypad.next
         self.printer.replace("logs","Lock is live and waiting for user input!")
-
+        while True:
+            time.sleep(1)
 
     def on_key(self,key):
         seconds_to_open = self.is_open()
