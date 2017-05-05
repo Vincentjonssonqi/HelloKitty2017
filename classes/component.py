@@ -22,14 +22,7 @@ class Component:
         if self.is_on is True:
             self.clock()
             self.is_on = False
+            
     def clock(self):
         self.buffer.write(self.command)
         self.buffer.write(self.buffer.neutral_command)
-    #toggle--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    #Description:
-    #Depending on the current state this function either turns the component on or off.
-
-    def toggle(self):
-        self.buffer.write(self.command)
-        self.is_on = not self.is_on

@@ -10,7 +10,7 @@ class Keypad:
 
 
 
-    #next_key--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    #on_key--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description:
     #Checks if a key is pressed and returns the key when the user has released the press
@@ -26,38 +26,31 @@ class Keypad:
     #start_keypad_interupt
 
     #Description:
-    #Asks the pi to call the poll_keypad function when an active column is detected
-    #The difference between this and constantly polling is that you save a lot of resources when you
-    #only have to poll the keypad when a person is actually pressing a key
+    #Use interupt approach to listen for keypad changes
 
     def start_keypad_interupt(self,cb):
-        print("stared interupt")
-        #We start of by writing switching the keypad state to interupt mode
-        #This basically mean that we ensure that we drive a 0 onto all rows at the same time always
-        #At least until we detect a key press
-        #When that happens the interupt should be triggered and we perform the same polling as before
-        #The advantage of this is that we do not poll all the time, only when the user is actually
-        #interacting with the keypad
-        for i in len(self.pins):
-            GPIO.add_event_detect(self.pins[i], GPIO.FALLING, callback=lambda pin: self.interupt_callback(pin,cb))
+         self.buffer.start_interupts(cb = lambda pin:self.interupt_callback(pin,cb))
+        
 
     def interupt_callback(self,pinId,cb):
-        for i in len(self.pins):
-            GPIO.remove_event_detect(self.pins[i])
-        print(pinId)
-        key = self.check_keypad()
-        if key:
-            cb(key)
-            self.start_keypad_interupt(cb)
-        else:
-            raise ValueError("Thekey should have been detected")
+        key = self.next_key()
+        cb(key)
+        self.start_keypad_interupt(cb)
 
 
     def start_keypad_polling(self,cb):
-        while True:
+        key = self.next_key()
+        cb(key)
+        self.start_keypad_polling(cb)
+        
+    def next_key(self):
+        key = None
+        while not key:
             key = self.check_keypad()
-            if key:
-                cb(key)
+        return key
+        
+                
+                
     #poll_keypad----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description:
@@ -88,7 +81,6 @@ class Keypad:
     def poll_row(self,row):
         #print(row)
         self.buffer.write(row)
-        time.sleep(20)
         column = self.buffer.read()
         if column != None:
             self.event_cb("key_down")

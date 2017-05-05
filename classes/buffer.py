@@ -1,18 +1,24 @@
 import RPi.GPIO as GPIO
 import time
 import random
-
-
+from threading import Timer
+from .interupt import Interupt
 class Buffer:
 
-    def __init__(self,pins,buffer_control_pin,register_control_pin,neutral_command,no_hardware):
+    def __init__(self,pins,buffer_control_pin,register_control_pin,neutral_command,interupt_command,no_hardware):
         self.pins = pins or []
+        #Buffer size means basically the number of pins, meaning number of bits that can be stored in the buffer
         self.size = len(self.pins)
+
         self.neutral_command = neutral_command
-                                                              #Buffer size means basically the number of pins, meaning number of bits that can be stored in the buffer
+        self.interupt_command = interupt_command
+        
         self.no_hardware = no_hardware or False
         self.buffer_control_pin = buffer_control_pin
         self.register_control_pin = register_control_pin
+        
+
+        
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
 
@@ -21,15 +27,39 @@ class Buffer:
 
 
 
-    #start_interupt
+    #start_keypad_interupt
 
-    def start_interupt():
-        for i in len(self.pins):
-            GPIO.setup(self.pins[i], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.add_event_detect(self.pins[i], GPIO.FALLING, callback=interupt_callback, bouncetime=300)
+    #Description:
+    #Asks the pi to call the poll_keypad function when an active column is detected
+    #The difference between this and constantly polling is that you save a lot of resources when you
+    #only have to poll the keypad when a person is actually pressing a key
 
-    def interupt_callback(pinId):
-        GPIO.remove_event_detect(pinId)
+    def start_interupts(self,cb):
+        #We start of by writing switching the keypad state to interupt mode
+        self.write(self.interupt_command)
+        time.sleep(.01)
+        #This basically mean that we ensure that we drive a 0 onto all rows at the same time always
+        #At least until we detect a key press
+        #When that happens the interupt should be triggered and we perform the same polling as before
+        #The advantage of this is that we do not poll all the time, only when the user is actually
+        #interacting with the keypad
+        for i in range(len(self.pins)):
+            pinId = self.pins[i]
+            GPIO.setup(pinId,GPIO.IN)
+            GPIO.add_event_detect(pinId, GPIO.FALLING, callback=lambda pinId: self.interupt_callback(pinId,cb))
+        #if self.no_hardware:
+         #   timer = Timer(random.randint(0,1),self.interupt_callback,(pinId,cb))
+          #  timer.start()
+        
+
+    def interupt_callback(self,pin,cb):
+        for i in range(len(self.pins)):
+            GPIO.remove_event_detect(self.pins[i])
+        time.sleep(.01)
+        self.write(self.neutral_command)
+        cb(pin)
+        
+    
     #write-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description
@@ -49,7 +79,7 @@ class Buffer:
             #Set the current buffer pin to output mode and set these pins to their corresponding value
             GPIO.setup(pin_id,GPIO.OUT)
             GPIO.output(pin_id,buffer_values[i])
-        print("WRITE OP value: {},code: {}".format(buffer_values,number))
+        #print("WRITE OP value: {},code: {}".format(buffer_values,number))
         time.sleep(.01)
         self.clock_register()
 
@@ -69,13 +99,16 @@ class Buffer:
 
 
     def read(self):
-
+        #Turn the register chip off so that you do not have interference
         self.enable_register(False)
         time.sleep(.01)
-                                                      #Turn the the buffer chip on to be able to recieve stuff again
-        buffer_values = []                                                                          #Generate buffer from the number
-        for i in range(len(self.pins)):                                                             #LOOP over buffer values
-            pin_id = self.pins[i]                                                                 	#fetch the pin id
+        
+        #Generate buffer from the number
+        buffer_values = []
+        #LOOP over buffer values
+        for i in range(len(self.pins)):
+            #fetch the pin id
+            pin_id = self.pins[i]                                                                 	
             GPIO.setup(pin_id,GPIO.IN)
 
         self.enable_buffer(True)
@@ -89,11 +122,11 @@ class Buffer:
 
 
         if self.no_hardware:
-            time.sleep(random.randint(0,1))
+            time.sleep(random.randint(0,3))
             fake_value = random.randint(0,8)
             return None if fake_value > 2 else fake_value
 
-        print("READ: {}".format(buffer_values))
+        #print("READ: {}".format(buffer_values))
         return self.convert_buffer_to_column(buffer_values)
 
 
@@ -127,11 +160,14 @@ class Buffer:
 
     def convert_number_to_buffer(self,number):
 
-
-        if len(bin(number)) > self.size + 2:                                                      #Check if the input number exceeds buffer size
-            raise ValueError("Number is to big for the buffer size")                                #Raise ValueError if number exceeds buffer size
-        binary_string = bin(number).replace("0b","").zfill(self.size)                             #Convert the number into a binary string, remove unecessary prefix ("0b") and make sure the binary string is at least length = 3
-        return [binary_string[i] == "1" for i in range(self.size)]                                #Convert binary string into boolean array
+        #Check if the input number exceeds buffer size
+        if len(bin(number)) > self.size + 2:
+            #Raise ValueError if number exceeds buffer size
+            raise ValueError("Number is to big for the buffer size")
+        #Convert the number into a binary string, remove unecessary prefix ("0b") and make sure the binary string is at least length = 3
+        binary_string = bin(number).replace("0b","").zfill(self.size)
+        #Convert binary string into boolean array
+        return [binary_string[i] == "1" for i in range(self.size)]                                
 
 
 

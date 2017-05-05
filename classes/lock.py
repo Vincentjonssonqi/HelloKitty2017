@@ -23,8 +23,8 @@ class Lock:
         self.printer.replace("status","LOCKED")
         self.printer.replace("logs","Created Lock")
 
-    def init_buffer(self,buffer_pins,buffer_disable_pin,clock_pin,neutral_command,not_real):
-        self.buffer = Buffer(buffer_pins,buffer_disable_pin,clock_pin,neutral_command,not_real)
+    def init_buffer(self,buffer_pins,buffer_disable_pin,clock_pin,neutral_command,interupt_command,not_real):
+        self.buffer = Buffer(buffer_pins,buffer_disable_pin,clock_pin,neutral_command,interupt_command,not_real)
         self.has_buffer = True
         self.printer.replace("logs","Buffer initilized")
 
@@ -34,13 +34,12 @@ class Lock:
         self.keypad = Keypad(keys,keypad_type,self.buffer,self.show)
         self.printer.replace("logs","Keypad initilized")
 
-    def init_components(self,buzzer_pin,success_led_pin,error_led_pin):
+    def init_components(self,buzzer_command,success_led_command,error_led_command):
         if not self.has_buffer:
             self.printer.replace("logs","Need to initilize buffer before you do this mate")
-
-        self.buzzer = Buzzer(buzzer_pin,self.buffer)
-        self.success_led = Led("red",success_led_pin,self.buffer)
-        self.error_led = Led("green",error_led_pin,self.buffer)
+        self.buzzer = Buzzer(buzzer_command,self.buffer)
+        self.success_led = Led("green",success_led_command,self.buffer)
+        self.error_led = Led("red",error_led_command,self.buffer)
         self.has_components = True
         self.printer.replace("logs","Components initilized")
 
@@ -87,14 +86,15 @@ class Lock:
         self.printer.replace("logs","Attempted password {0}".format(self.attempt.password))
         if self.password_line_timer:
             self.password_line_timer.cancel()
-        #self.update_password_line(self.attempt.password,False)
-        #self.password_line_timer = Timer(1.0,self.update_password_line,(self.attempt.password,True))
-        #self.password_line_timer.start()
+        self.update_password_line(self.attempt.password,False)
+        self.password_line_timer = Timer(1.0,self.update_password_line,(self.attempt.password,True))
+        self.password_line_timer.start()
         #Tries to unlock the safe on every key entery when is_vulnerable is set to True
         #This functionality exists so that we candemmonstrate the side channel attack
         #If is_vulnerable is set to False, the lock will only evaluate the code
         #once the attempted password is the same size as the actual password
         if self.is_vulnerable or self.is_password_complete(self.attempt.password):
+            self.password_line_timer.cancel()
             result = self.unlock(self.attempt)
             self.attempt = self.attempt if result == 0 else None
 
@@ -103,7 +103,7 @@ class Lock:
 
 
     def update_password_line(self,password,cover_all):
-        stars = (len(password) - 0 if cover_all else 1 )*"*"
+        stars = (len(password) - (0 if cover_all else 1) )*"*"
         key = password[len(password)-1] if not cover_all else ""
         dashes = (len(self.password) - len(password))*"-"
         self.printer.replace("keypad","[ {0}{1}{2} ]".format(stars,key,dashes))
@@ -167,7 +167,7 @@ class Lock:
 
     def deactivate(self,duration):
         countdown = duration
-        #self.update_password_line("",False)
+        self.update_password_line("",True)
         while countdown >= 0:
             progress = int(40*(1-(float(countdown)/float(duration))))
             self.printer.replace("logs","Keypad deactivated: [{0}{1}] {2}s remaining".format((40- progress)*"=",progress*" ",countdown))
