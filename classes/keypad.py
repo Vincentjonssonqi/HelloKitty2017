@@ -2,7 +2,7 @@ import time
 class Keypad:
     def __init__(self,keys,keypad_type,buffer,cb):
         self.keys = keys
-        self.use_interupt = keypad_type == "interupt"
+        self.use_interupt = keypad_type == "interrupt"
         self.event_cb = cb
         self.buffer = buffer
 
@@ -19,7 +19,7 @@ class Keypad:
     #A string with the pressed key's face value.
     def on_key(self,cb):
         if self.use_interupt:
-            self.start_keypad_interupt(cb)
+            self.start_keypad_interrupt(cb)
         else:
             self.start_keypad_polling(cb)
 
@@ -28,29 +28,29 @@ class Keypad:
     #Description:
     #Use interupt approach to listen for keypad changes
 
-    def start_keypad_interupt(self,cb):
-         self.buffer.start_interupts(cb = lambda pin:self.interupt_callback(pin,cb))
-        
+    def start_keypad_interrupt(self,cb):
+         self.buffer.start_interrupts(cb = lambda pin:self.interrupt_callback(pin,cb))
 
-    def interupt_callback(self,pinId,cb):
+
+    def interrupt_callback(self,pinId,cb):
         key = self.next_key()
         cb(key)
-        self.start_keypad_interupt(cb)
+        self.start_keypad_interrupt(cb)
 
 
     def start_keypad_polling(self,cb):
         key = self.next_key()
         cb(key)
         self.start_keypad_polling(cb)
-        
+
     def next_key(self):
         key = None
         while not key:
             key = self.check_keypad()
         return key
-        
-                
-                
+
+
+
     #poll_keypad----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description:
