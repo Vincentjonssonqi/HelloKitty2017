@@ -68,7 +68,8 @@ class Lock:
     def start(self):
         self.log("{},{},{}".format(datetime.now().isoformat(),0,"Start"))
         self.attempt = None
-        self.keypad.on_key(self.on_key)
+        while True:
+            key = self.keypad.next
         self.printer.replace("logs","Lock is live and waiting for user input!")
 
 
@@ -77,18 +78,22 @@ class Lock:
         if seconds_to_open > 0:
             self.deactivate(seconds_to_open)
             return
-
+        print("passed open evaluation")
         if not self.attempt:
             self.attempt = UnlockAttempt()
             self.printer.replace("logs","Attempt {0}".format(self.failed_attempts + 1))
-
+        print("Created attempt if does not exist")
         self.attempt.password += key
         self.printer.replace("logs","Attempted password {0}".format(self.attempt.password))
+        print("updated logs")
+
         if self.password_line_timer:
             self.password_line_timer.cancel()
         self.update_password_line(self.attempt.password,False)
         self.password_line_timer = Timer(1.0,self.update_password_line,(self.attempt.password,True))
         self.password_line_timer.start()
+
+        print("updated the password line in the UI")
         #Tries to unlock the safe on every key entery when is_vulnerable is set to True
         #This functionality exists so that we candemmonstrate the side channel attack
         #If is_vulnerable is set to False, the lock will only evaluate the code
@@ -97,6 +102,7 @@ class Lock:
             self.password_line_timer.cancel()
             result = self.unlock(self.attempt)
             self.attempt = self.attempt if result == 0 else None
+        print("Evaluated password")
 
 
 

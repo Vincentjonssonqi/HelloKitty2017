@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 BUFFER_PINS = [11,10,9]
 BUFFER_DISABLE_PIN = 15
 BUFFER_CLOCK_PIN = 14
-
+COLUMN_CHANGE_PIN = 8
 BUFFER_NEUTRAL_COMMAND = 0
 BUZZER_COMMAND = 4
 RED_LED_COMMAND = 6
@@ -19,7 +19,7 @@ INTERUPT_COMMAND = 7
 
 ATTEMPT_LIMIT = 3
 #The number of seconds the lock will be deactivated for if an attempt limit is reached
-DEACTIVATION_DURATION = 5
+DEACTIVATION_DURATION = 1
 #Opens at 9AM
 OPENS_AT = datetime.time(9,0)
  #Closes at 21PM
@@ -28,11 +28,11 @@ CLOSES_AT = datetime.time(9,0)
 
 ALLOW_MAX_LOCKOUT = True
 #If you wish to try the code without the actual keypad you make this True, and random keys will be entered at random time intervals
-NO_REAL_BUFFER = True
+NO_REAL_BUFFER = False
 #This value is used to configure the lock to be vulnerable to a side channel attack
 ENABLE_SIDE_CHANNEL_ATTACK = False
 #Can be either polling or interupt
-KEYPAD_TYPE = "interupt"
+KEYPAD_TYPE = "interrupt"
 KEYPAD_KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]]
 
 
@@ -96,7 +96,7 @@ def init():
     global lock
     lock = Lock(ENABLE_SIDE_CHANNEL_ATTACK,printer)
 
-    lock.init_buffer(BUFFER_PINS,BUFFER_DISABLE_PIN,BUFFER_CLOCK_PIN,BUFFER_NEUTRAL_COMMAND,INTERUPT_COMMAND,NO_REAL_BUFFER)
+    lock.init_buffer(BUFFER_PINS,BUFFER_DISABLE_PIN,BUFFER_CLOCK_PIN,COLUMN_CHANGE_PIN,BUFFER_NEUTRAL_COMMAND,INTERUPT_COMMAND,NO_REAL_BUFFER)
     lock.init_keypad(KEYPAD_TYPE,KEYPAD_KEYS)
     lock.init_components(BUZZER_COMMAND,GREEN_LED_COMMAND,RED_LED_COMMAND)
     lock.config_time_lockout(OPENS_AT,CLOSES_AT)
@@ -106,8 +106,11 @@ def init():
 
     if ALLOW_MAX_LOCKOUT:
         lock.config_max_lockout(ATTEMPT_LIMIT,DEACTIVATION_DURATION)
-
-    lock.start()
+    counter = 0
+    while True:
+        if counter == 0:
+            lock.start()
+        counter +=1
 
 
 
