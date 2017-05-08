@@ -38,7 +38,7 @@ class Buffer:
     def next_column_change(self):
         #We start of by writing switching the keypad state to interupt mode
         self.write(self.interrupt_command)
-        time.sleep(.01)
+        time.sleep(.001)
         #This basically mean that we ensure that we drive a 0 onto all rows at the same time always
         #At least until we detect a key press
         #When that happens the interupt should be triggered and we perform the same polling as before
@@ -65,7 +65,7 @@ class Buffer:
     #number: An integerself.buffer.neutral_commandfer(False)
     def write(self,number):
         self.enable_buffer(False)
-        time.sleep(.01)
+        time.sleep(.001)
         #Generate buffer from the number
         buffer_values = self.convert_number_to_buffer(number)
         #LOOP over buffer values
@@ -76,7 +76,7 @@ class Buffer:
             GPIO.setup(pin_id,GPIO.OUT)
             GPIO.output(pin_id,buffer_values[i])
         #print("WRITE OP value: {},code: {}".format(buffer_values,number))
-        time.sleep(.01)
+        time.sleep(.001)
         self.clock_register()
 
 
@@ -97,7 +97,7 @@ class Buffer:
     def read(self):
         #Turn the register chip off so that you do not have interference
         self.enable_register(False)
-        time.sleep(.01)
+        time.sleep(.001)
 
         #Generate buffer from the number
         buffer_values = []
@@ -108,7 +108,7 @@ class Buffer:
             GPIO.setup(pin_id,GPIO.IN)
 
         self.enable_buffer(True)
-        time.sleep(.01)
+        time.sleep(.001)
 
         for i in range(len(self.pins)):
             pin_id = self.pins[i]
@@ -149,9 +149,9 @@ class Buffer:
 
     def clock_register (self):
         self.enable_register(False)
-        time.sleep(.01)
+        time.sleep(.001)
         self.enable_register(True)
-        time.sleep(.01)
+        time.sleep(.001)
         self.enable_register(False)
 
     def convert_number_to_buffer(self,number):

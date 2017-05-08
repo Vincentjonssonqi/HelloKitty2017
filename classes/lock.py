@@ -78,14 +78,11 @@ class Lock:
         if seconds_to_open > 0:
             self.deactivate(seconds_to_open)
             return
-        print("passed open evaluation")
         if not self.attempt:
             self.attempt = UnlockAttempt()
             self.printer.replace("logs","Attempt {0}".format(self.failed_attempts + 1))
-        print("Created attempt if does not exist")
         self.attempt.password += key
         self.printer.replace("logs","Attempted password {0}".format(self.attempt.password))
-        print("updated logs")
 
         if self.password_line_timer:
             self.password_line_timer.cancel()
@@ -93,7 +90,6 @@ class Lock:
         self.password_line_timer = Timer(1.0,self.update_password_line,(self.attempt.password,True))
         self.password_line_timer.start()
 
-        print("updated the password line in the UI")
         #Tries to unlock the safe on every key entery when is_vulnerable is set to True
         #This functionality exists so that we candemmonstrate the side channel attack
         #If is_vulnerable is set to False, the lock will only evaluate the code
@@ -102,7 +98,6 @@ class Lock:
             self.password_line_timer.cancel()
             result = self.unlock(self.attempt)
             self.attempt = self.attempt if result == 0 else None
-        print("Evaluated password")
 
 
 
@@ -163,7 +158,6 @@ class Lock:
             self.error_led.on()
         elif state == "key_down":
             self.buzzer.on()
-            self.error_led.on()
         else:
             self.buzzer.off()
             #This will turn off automatically with the multi vibrator thingy :P
@@ -174,16 +168,14 @@ class Lock:
     def deactivate(self,duration):
         countdown = duration
         self.update_password_line("",True)
-        while countdown >= 0:
+        while countdown > 0:
             progress = int(40*(1-(float(countdown)/float(duration))))
             self.printer.replace("logs","Keypad deactivated: [{0}{1}] {2}s remaining".format((40- progress)*"=",progress*" ",countdown))
-            time.sleep(1)
+            time.sleep(.7)
             countdown -= 1
         self.printer.replace("logs","Activated keypad")
 
     def lock(self):
-        self.printer.replace("logs","Wait for user input...")
-        self.failed_attempts = 0
         self.locked = True
         self.show("lock")
         self.printer.replace("status","LOCKED")
@@ -204,13 +196,16 @@ class Lock:
         else:
             self.printer.replace("logs","Wrong password!")
             attempt.outcome(False)
+            self.show("error")
+            self.deactivate(1)
+            self.show("")
             self.failed_attempts += 1
             if self.failed_attempts >= self.attempt_limit:
                 self.deactivate(self.deactivation_duration)
                 self.failed_attempts = 0
-            self.show("error")
-            self.deactivate(10)
-            self.show("")
+
+
+
             self.log(str(attempt))
             return -1
 

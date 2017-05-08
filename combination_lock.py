@@ -12,14 +12,14 @@ BUFFER_DISABLE_PIN = 15
 BUFFER_CLOCK_PIN = 14
 COLUMN_CHANGE_PIN = 3
 BUFFER_NEUTRAL_COMMAND = 0
-BUZZER_COMMAND = 4
-RED_LED_COMMAND = 6
-GREEN_LED_COMMAND = 5
+BUZZER_COMMAND = 6
+RED_LED_COMMAND = 5
+GREEN_LED_COMMAND = 4
 INTERUPT_COMMAND = 7
 
 ATTEMPT_LIMIT = 3
 #The number of seconds the lock will be deactivated for if an attempt limit is reached
-DEACTIVATION_DURATION = 1
+DEACTIVATION_DURATION = 10
 #Opens at 9AM
 OPENS_AT = datetime.time(9,0)
  #Closes at 21PM
@@ -30,7 +30,7 @@ ALLOW_MAX_LOCKOUT = True
 #If you wish to try the code without the actual keypad you make this True, and random keys will be entered at random time intervals
 NO_REAL_BUFFER = False
 #This value is used to configure the lock to be vulnerable to a side channel attack
-ENABLE_SIDE_CHANNEL_ATTACK = False
+ENABLE_SIDE_CHANNEL_ATTACK = True
 #Can be either polling or interupt
 KEYPAD_TYPE = "interrupt"
 KEYPAD_KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]]
