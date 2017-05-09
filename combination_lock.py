@@ -7,10 +7,12 @@ from classes.printer import Printer
 import RPi.GPIO as GPIO
 #CONSTANTS--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
 BUFFER_PINS = [11,10,9]
 BUFFER_DISABLE_PIN = 15
 BUFFER_CLOCK_PIN = 14
 COLUMN_CHANGE_PIN = 3
+TIMEOUT_LED_PINS = [5,6,12,13,16,19,20,26]
 BUFFER_NEUTRAL_COMMAND = 0
 BUZZER_COMMAND = 6
 RED_LED_COMMAND = 5
@@ -20,6 +22,7 @@ INTERUPT_COMMAND = 7
 ATTEMPT_LIMIT = 3
 #The number of seconds the lock will be deactivated for if an attempt limit is reached
 DEACTIVATION_DURATION = 10
+ATTEMPT_TIMEOUT_DURATION = 3
 #Opens at 9AM
 OPENS_AT = datetime.time(9,0)
  #Closes at 21PM
@@ -87,10 +90,11 @@ def setup_print_layout():
 
 
 def init():
-
+    GPIO.setwarnings(False)
+    GPIO.setmode(GPIO.BCM)
 
     setup_print_layout()
-    signal.signal(signal.SIGINT, signal_handler)
+    #signal.signal(signal.SIGINT, signal_handler)
 
 
     global lock
@@ -99,6 +103,7 @@ def init():
     lock.init_buffer(BUFFER_PINS,BUFFER_DISABLE_PIN,BUFFER_CLOCK_PIN,COLUMN_CHANGE_PIN,BUFFER_NEUTRAL_COMMAND,INTERUPT_COMMAND,NO_REAL_BUFFER)
     lock.init_keypad(KEYPAD_TYPE,KEYPAD_KEYS)
     lock.init_components(BUZZER_COMMAND,GREEN_LED_COMMAND,RED_LED_COMMAND)
+    lock.config_attempt_timeout(ATTEMPT_TIMEOUT_DURATION,TIMEOUT_LED_PINS)
     lock.config_time_lockout(OPENS_AT,CLOSES_AT)
     lock.config_security(ENABLE_SIDE_CHANNEL_ATTACK)
     lock.set_password(get_password())
@@ -106,11 +111,15 @@ def init():
 
     if ALLOW_MAX_LOCKOUT:
         lock.config_max_lockout(ATTEMPT_LIMIT,DEACTIVATION_DURATION)
-    counter = 0
-    while True:
-        if counter == 0:
-            lock.start()
-        counter +=1
+    try:
+        lock.start()
+    except KeyboardInterrupt:
+        lock.quit()
+        printer.replace("status","Done")
+        time.sleep(.2)
+        print ("\n\n\n\nGood bye Mike! If you happen to be anybody else then we are in a bit of tought situation. You see this is message will always be the same. Soo.. either you change your name or you have have to remember not to read this last message on exit.")
+        GPIO.cleanup()
+        sys.exit(1)
 
 
 

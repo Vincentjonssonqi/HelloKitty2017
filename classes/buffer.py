@@ -2,7 +2,6 @@ import RPi.GPIO as GPIO
 import time
 import random
 from threading import Timer
-from .interupt import Interupt
 class Buffer:
 
     def __init__(self,pins,buffer_control_pin,register_control_pin,column_change_pin,neutral_command,interrupt_command,no_hardware):
