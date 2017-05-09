@@ -15,4 +15,4 @@ set xrange [GPVAL_X_MIN:GPVAL_X_MAX]
 set title 'Access Time Graph'
 set ylabel 'Lock state (1 = Unlocked, 0 = Idle, -1 = Deactivated)'
 set xlabel 'Time'
-plot 'logs.csv' title '' using 1:2 with lines
+plot 'logs.csv' using 1:2 title '' with lines
