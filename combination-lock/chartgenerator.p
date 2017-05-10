@@ -1,5 +1,5 @@
 set term png
-
+set output 'accesschart.png'
 set datafile sep ','
 set ytic 1
 

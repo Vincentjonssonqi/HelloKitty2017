@@ -109,11 +109,7 @@ class Lock:
         self.attempt.password += key
         self.printer.replace("logs","Attempted password {0}".format(self.attempt.password))
 
-        if self.password_line_timer:
-            self.password_line_timer.cancel()
-        self.update_password_line(self.attempt.password,False)
-        self.password_line_timer = Timer(1.0,self.update_password_line,(self.attempt.password,True))
-        self.password_line_timer.start()
+        self.start_password_timer()
 
         if self.has_attempt_timeout:
             self.reset_attempt_timeout()
@@ -123,11 +119,20 @@ class Lock:
         #If is_vulnerable is set to False, the lock will only evaluate the code
         #once the attempted password is the same size as the actual password
         if self.is_vulnerable or self.is_password_complete(self.attempt.password):
-            self.password_line_timer.cancel()
+            self.cancel_password_timer()
             self.unlock()
 
 
-
+    def start_password_timer(self):
+        if self.password_line_timer:
+            self.password_line_timer.cancel()
+        self.update_password_line(self.attempt.password,False)
+        self.password_line_timer = Timer(1.0,self.update_password_line,(self.attempt.password,True))
+        self.password_line_timer.start()
+    def cancel_password_timer(self):
+        if self.password_line_timer:
+            self.password_line_timer.cancel()
+            self.password_line_timer = None
 
     def start_attempt_timeout(self):
         self.update_attempt_timeout(0.0)
@@ -152,6 +157,7 @@ class Lock:
 
     def cancel_attempt(self):
         self.attempt = None
+        self.cancel_password_timer()
         self.reset_attempt_timeout()
     def update_password_line(self,password,cover_all):
         stars = (len(password) - (0 if cover_all else 1) )*"*"

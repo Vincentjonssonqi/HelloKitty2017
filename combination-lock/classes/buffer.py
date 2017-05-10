@@ -28,6 +28,8 @@ class Buffer:
 
 
 
+
+
     #start_keypad_interupt
 
     #Description:
@@ -82,6 +84,21 @@ class Buffer:
 
 
 
+    #debounce
+
+    #Description:
+    #Debounces the reads on the column lines
+
+    def Debounce(self,value):
+        MyArray = []
+        for i in range(8):
+            MyArray.append(1)
+        while MyArray[0]==1:
+            MyArray=MyArray[1:]+[0]
+            MyArray[7] = 0
+        print(MyArray)
+
+
 
     #read-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -111,6 +128,8 @@ class Buffer:
 
         for i in range(len(self.pins)):
             pin_id = self.pins[i]
+            #TODO
+            #Implement debounce here
             buffer_values.append(GPIO.input(pin_id))
 
 
