@@ -9,7 +9,7 @@ from .internalled import InternalLed
 from .led import Led
 import os
 import subprocess
-
+import RPi.GPIO as GPIO
 from .unlockattempt import UnlockAttempt
 class Lock:
 
@@ -25,6 +25,7 @@ class Lock:
         self.password_line_timer = None
         self.key_pressed = False
         self.timeout_timer = None
+        self.attempt_limit = None
         self.printer.replace("status","LOCKED")
         self.printer.replace("logs","Created Lock")
 
@@ -81,11 +82,12 @@ class Lock:
     def start(self):
         self.log("{},{},{}".format(datetime.now().isoformat(),0,"Start"))
         self.attempt = None
+        self.hej()
+        self.printer.replace("logs","Lock is live and waiting for user input!")
+    def hej(self):
         while True:
             if not self.key_pressed:
                 self.keypad.next_key()
-        self.printer.replace("logs","Lock is live and waiting for user input!")
-
     def keypad_callback(self,event,key):
         if event == "key_down":
             self.show("key_down")
@@ -123,6 +125,7 @@ class Lock:
             self.unlock()
 
 
+
     def start_password_timer(self):
         if self.password_line_timer:
             self.password_line_timer.cancel()
@@ -136,6 +139,7 @@ class Lock:
 
     def start_attempt_timeout(self):
         self.update_attempt_timeout(0.0)
+
     def update_attempt_timeout(self,time):
 
         delta_time = float(self.attempt_timeout_duration)/float(len(self.timeout_leds))
@@ -147,7 +151,9 @@ class Lock:
             self.timeout_timer = Timer(delta_time,self.update_attempt_timeout,(new_total_time,))
             self.timeout_timer.start()
         else:
+            self.reset_attempt_timeout()
             self.failed_to_unlock()
+            self.hej()
 
     def reset_attempt_timeout(self):
         if self.timeout_timer:
@@ -254,7 +260,7 @@ class Lock:
     def succeeded_to_unlock(self):
         self.printer.replace("logs","Password was correct!")
         self.attempt.outcome(True)
-
+        self.failed_attempts = 0
         self.locked = False
         self.printer.replace("status","UNLOCKED")
         self.show("unlocked")
@@ -277,7 +283,7 @@ class Lock:
         self.deactivate(1)
         self.show("")
         self.failed_attempts += 1
-        if self.failed_attempts >= self.attempt_limit:
+        if self.attempt_limit and self.failed_attempts >= self.attempt_limit:
 
             self.deactivate(self.deactivation_duration)
             self.failed_attempts = 0

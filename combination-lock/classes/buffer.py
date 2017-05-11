@@ -38,6 +38,9 @@ class Buffer:
     #only have to poll the keypad when a person is actually pressing a key
     def next_column_change(self):
         #We start of by writing switching the keypad state to interupt mode
+        GPIO.cleanup(self.column_change_pin)
+        GPIO.setup(self.column_change_pin,GPIO.IN)
+        time.sleep(.001)
         self.write(self.interrupt_command)
         time.sleep(.001)
         #This basically mean that we ensure that we drive a 0 onto all rows at the same time always

@@ -29,7 +29,7 @@ OPENS_AT = datetime.time(9,0)
 CLOSES_AT = datetime.time(9,0)
 
 
-ALLOW_MAX_LOCKOUT = True
+ALLOW_MAX_LOCKOUT = False
 #If you wish to try the code without the actual keypad you make this True, and random keys will be entered at random time intervals
 NO_REAL_BUFFER = False
 #This value is used to configure the lock to be vulnerable to a side channel attack
