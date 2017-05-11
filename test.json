@@ -1,0 +1,215 @@
+[{
+    "id": "20",
+    "teamId": "20",
+    "lng": "-0.326827",
+    "lat": "51.750023",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/20-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "28",
+    "teamId": "28",
+    "lng": "4.85824",
+    "lat": "52.312046",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/28-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "31",
+    "teamId": "31",
+    "lng": "4.85827",
+    "lat": "52.312248",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/31-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "32",
+    "teamId": "32",
+    "lng": "4.85824",
+    "lat": "52.312046",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/32-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "40",
+    "teamId": "40",
+    "lng": "-0.407618",
+    "lat": "51.741505",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/40-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "42",
+    "teamId": "42",
+    "lng": "-0.334237",
+    "lat": "51.751163",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/42-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "43",
+    "teamId": "43",
+    "lng": "-0.404018",
+    "lat": "51.738403",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/43-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "44",
+    "teamId": "44",
+    "lng": "-0.334455",
+    "lat": "51.751171",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/44-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "45",
+    "teamId": "45",
+    "lng": "-0.334582",
+    "lat": "51.750984",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/45-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "46",
+    "teamId": "46",
+    "lng": "-0.334278",
+    "lat": "51.751171",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/46-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "48",
+    "teamId": "48",
+    "lng": "-0.40433",
+    "lat": "51.738907",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/48-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "49",
+    "teamId": "49",
+    "lng": "-0.334393",
+    "lat": "51.751156",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/49-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "sweden",
+    "teamId": "sweden",
+    "lng": "-0.4070011",
+    "lat": "51.7411954",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/sweden-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "food2",
+    "lng": "4.858312",
+    "lat": "52.312012",
+    "layer": "match",
+    "icon": {
+        "iconUrl": "images/map/markers/food&drinks-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "france",
+    "teamId": "france",
+    "lng": "-0.396297",
+    "lat": "51.74218",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/france-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "sweden",
+    "teamId": "sweden",
+    "lng": "4.858312",
+    "lat": "52.312012",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/sweden-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "nertherlands",
+    "teamId": "nertherlands",
+    "lng": "-0.40634",
+    "lat": "51.739243",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/nertherlands-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}, {
+    "id": "sweden",
+    "teamId": "sweden",
+    "lng": "-0.40764",
+    "lat": "51.741554",
+    "layer": "match",
+    "riseOnHover": true,
+    "icon": {
+        "iconUrl": "images/map/markers/sweden-marker.svg",
+        "iconSize": [30, 40],
+        "iconAnchor": [15, 40]
+    }
+}]
