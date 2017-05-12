@@ -1,6 +1,6 @@
 import sys
 class Printer:
-    
+
     def __init__(self):
         self.count = 0
         self.lines = {}
@@ -17,19 +17,19 @@ class Printer:
         line = self.lines[name]
         from_cursor_to_content = self.count - line.get("line_number")
         line["content"] = content
-        for i in range(from_cursor_to_content):
-            sys.stdout.write("\033[F") #back to previous line
-            sys.stdout.flush()
-        self.remove()
+        #for i in range(from_cursor_to_content):
+        #    sys.stdout.write("\033[F") #back to previous line
+        #    sys.stdout.flush()
+        #self.remove()
         self.print_line(line)
         for i in range(from_cursor_to_content + 1):
             sys.stdout.write("\033[B") #forward to the next line
             sys.stdout.flush()
-        
+
     def remove(self):
         sys.stdout.write("\033[K") #clear line
         sys.stdout.flush()
-            
+
     def print_line(self,line):
         sys.stdout.write("\t\t{}{}\n".format(line["prefix"],line["content"]))
         sys.stdout.flush()

@@ -13,7 +13,7 @@ BUFFER_DISABLE_PIN = 15
 BUFFER_CLOCK_PIN = 14
 COLUMN_CHANGE_PIN = 17
 TIMEOUT_LED_PINS = [5,6,12,13,16,19,20,26]
-BUFFER_NEUTRAL_COMMAND = 0
+BUFFER_NEUTRAL_COMMAND = 7
 BUZZER_COMMAND = 6
 RED_LED_COMMAND = 5
 GREEN_LED_COMMAND = 4
@@ -35,7 +35,7 @@ NO_REAL_BUFFER = False
 #This value is used to configure the lock to be vulnerable to a side channel attack
 ENABLE_SIDE_CHANNEL_ATTACK = True
 #Can be either polling or interupt
-KEYPAD_TYPE = "interrupt"
+KEYPAD_TYPE = "polling"
 KEYPAD_KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]]
 
 

@@ -26,8 +26,10 @@ class Lock:
         self.key_pressed = False
         self.timeout_timer = None
         self.attempt_limit = None
+        self.using_interrupt = False
         self.printer.replace("status","LOCKED")
         self.printer.replace("logs","Created Lock")
+        self.busy = False
 
     def init_buffer(self,buffer_pins,buffer_control_pin,register_control_pin,column_change_pin,neutral_command,interupt_command,not_real):
         self.buffer = Buffer(buffer_pins,buffer_control_pin,register_control_pin,column_change_pin,neutral_command,interupt_command,not_real)
@@ -35,6 +37,7 @@ class Lock:
         self.printer.replace("logs","Buffer initilized")
 
     def init_keypad(self,keypad_type,keys):
+        self.using_interrupt = keypad_type == "interrupt"
         if self.has_buffer:
             self.printer.replace("logs","You need a buffer for the keypad, make sure you initilize it before you init the keypad")
         self.keypad = Keypad(keys,keypad_type,self.buffer,self.keypad_callback)
@@ -91,13 +94,18 @@ class Lock:
     def keypad_callback(self,event,key):
         if event == "key_down":
             self.show("key_down")
-            self.on_key(key)
             self.key_pressed = True
+            self.on_key(key)
+
         elif event == "key_up":
             self.key_pressed = False
             self.show("")
 
     def on_key(self,key):
+        if self.busy:
+            return
+        else:
+            self.busy = True
 
         seconds_to_open = self.is_open()
         if seconds_to_open > 0:
@@ -111,7 +119,7 @@ class Lock:
         self.attempt.password += key
         self.printer.replace("logs","Attempted password {0}".format(self.attempt.password))
 
-        self.start_password_timer()
+
 
         if self.has_attempt_timeout:
             self.reset_attempt_timeout()
@@ -121,8 +129,9 @@ class Lock:
         #If is_vulnerable is set to False, the lock will only evaluate the code
         #once the attempted password is the same size as the actual password
         if self.is_vulnerable or self.is_password_complete(self.attempt.password):
-            self.cancel_password_timer()
-            self.unlock()
+            self.unlock(self.attempt)
+        print(key)
+        self.busy = False
 
 
 
@@ -141,7 +150,8 @@ class Lock:
         self.update_attempt_timeout(0.0)
 
     def update_attempt_timeout(self,time):
-
+        if not self.attempt:
+            return
         delta_time = float(self.attempt_timeout_duration)/float(len(self.timeout_leds))
 
         new_total_time = time + delta_time
@@ -151,9 +161,12 @@ class Lock:
             self.timeout_timer = Timer(delta_time,self.update_attempt_timeout,(new_total_time,))
             self.timeout_timer.start()
         else:
+            self.busy = True
             self.reset_attempt_timeout()
-            self.failed_to_unlock()
-            self.hej()
+            self.failed_to_unlock(self.attempt)
+            self.busy = False
+            if self.using_interrupt:
+                self.hej()
 
     def reset_attempt_timeout(self):
         if self.timeout_timer:
@@ -165,6 +178,7 @@ class Lock:
         self.attempt = None
         self.cancel_password_timer()
         self.reset_attempt_timeout()
+
     def update_password_line(self,password,cover_all):
         stars = (len(password) - (0 if cover_all else 1) )*"*"
         key = password[len(password)-1] if not cover_all else ""
@@ -244,41 +258,48 @@ class Lock:
         self.printer.replace("status","LOCKED")
         self.log("{},{},{}".format(datetime.now().isoformat(),0,"Locked"))
 
-    def unlock(self):
-        if self.is_password_complete_and_correct(self.attempt.password):
-            self.succeeded_to_unlock()
+    def unlock(self,attempt):
+        if not attempt:
+            return
+        if self.is_password_complete_and_correct(attempt.password):
+            self.succeeded_to_unlock(attempt)
             return 1
-        elif self.is_password_correct(self.attempt.password):
+        elif self.is_password_correct(attempt.password):
+            self.start_password_timer()
             return 0
         else:
-            self.failed_to_unlock()
+            self.failed_to_unlock(attempt)
             return -1
 
 
 
 
-    def succeeded_to_unlock(self):
+    def succeeded_to_unlock(self,attempt):
+        if not attempt:
+            return
         self.printer.replace("logs","Password was correct!")
-        self.attempt.outcome(True)
+        attempt.outcome(True)
         self.failed_attempts = 0
         self.locked = False
         self.printer.replace("status","UNLOCKED")
         self.show("unlocked")
         self.log("{},{},{}".format(datetime.now().isoformat(),0,"Locked"))
-        self.log(str(self.attempt))
+        self.log(str(attempt))
         self.cancel_attempt()
         self.deactivate(3)
         self.log("{},{},{}".format(datetime.now().isoformat(),1,"Unlocked"))
         self.lock()
 
-    def failed_to_unlock(self):
+    def failed_to_unlock(self,attempt):
+        if not attempt:
+            return
         self.printer.replace("logs","Wrong password!")
         self.log("{},{},{}".format(datetime.now().isoformat(),0,"Locked"))
-        self.attempt.outcome(False)
+        attempt.outcome(False)
 
         self.show("error")
 
-        self.log(str(self.attempt))
+        self.log(str(attempt))
         self.cancel_attempt()
         self.deactivate(1)
         self.show("")
