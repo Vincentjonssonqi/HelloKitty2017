@@ -1,28 +1,57 @@
-import smbus
+
+#import smbus
 import time
-from display import Display
+#from display import Display
 
 class Lockpick:
     #timeout can't be found by polling the lock
-    def __init__(self, lock_type="polling", password_length=4, timeout=3.5, discover_timings=True):
-        self.display = Display()
+    def __init__(self, lock_type="polling", password_length=4, timeout=3.5,correct_timeout = 3.0, discover_timings=True,hardware = False):
         self.lock_type = lock_type
         self.password_length = password_length
         self.timeout = timeout
         self.keypad_keys = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"], ["*", "0", "#"]]
         self.rows = len(self.keypad_keys)
         self.columns = len(self.keypad_keys[0])
-        self.i2c = smbus.SMBus(1)
-        self.i2c.write_byte(0x38, 0xFF)
+
         self.column_bytes = [0b11110011, 0b11110101, 0b11111001]
         self.row_bytes = [0b11100001, 0b11010001, 0b10110001, 0b01110001, 0b11110001, 1]
         self.key_vectors = [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2),(3,0),(3,1),(3,2)]
+        self.hardware = hardware
+        self.correct_timeout = correct_timeout
+
         #The default of the i2c chip is to set all pins to high.
         #To not poll all the columns directly we call the unpress function
-        self.unpress()
+        if hardware:
+            self.display = Display()
+            self.i2c = smbus.SMBus(1)
+            self.i2c.write_byte(0x38, 0xFF)
+            self.unpress()
+        else:
+            self.generate_test_variables()
         print("insert cable")
         #time.sleep(10)
         self.calculate_timings(discover_timings)
+
+
+
+    def generate_test_variables(self):
+        self.attempt = ""
+        self.password = "7427"
+
+    def update_attempt(self,row,column):
+        self.attempt += self.keypad_keys[row][column]
+        correct_content = self.password.startswith(self.attempt)
+        correct_length = len(self.password) == len(self.attempt)
+
+        if correct_length and correct_content:
+            self.attempt = ""
+            return 2.9
+        elif correct_content:
+            return .15
+        else:
+            self.attempt = ""
+            return .8
+
 
     #press
 
@@ -83,6 +112,11 @@ class Lockpick:
     	#time taken to reactivate keypad after keypress (optional return)
 
     def press_key(self, row, column, return_time=False):
+        if not self.hardware:
+            timing = self.update_attempt(row,column)
+            time.sleep(timing)
+            return timing if return_time else None
+
         if self.lock_type != "polling":
             self.press(column)
             time.sleep(0.01)
@@ -127,12 +161,14 @@ class Lockpick:
             correct_time = min(timings)
             timings.remove(max(timings)) #allows code to work in case calculate_timings finds password
             incorrect_time = max(timings)
-            self.threshold = (correct_time + incorrect_time) / 2
+            self.threshold_low = (correct_time + incorrect_time) / 2
+            self.threshold_high = (self.correct_timeout + incorrect_time) / 2
             print("correct time", correct_time)
             print("incorrect time", incorrect_time)
-            print("threshold", self.threshold)
+            print("threshold", self.threshold_low,self.threshold_high)
         else:
-            self.threshold = 0.8
+            self.threshold_low = .5
+            self.threshold_high = 1.5
 
 
     #next_key
@@ -164,15 +200,30 @@ class Lockpick:
 
     def get_password(self):
         password = []
+        password_string = ""
+        input_known_password = False
         for digit in range(self.password_length):
+            print("Finding digit ", digit)
             for key in self.key_vectors:
-                for i in password:
-                    self.press_key(i[0],  i[1])
-                if self.press_key(key[0], key[1], True) < self.threshold:
+                if input_known_password:
+                    for i in password:
+                        print("Inserting known key ", i,self.keypad_keys[i[0]][i[1]])
+                        self.press_key(i[0],  i[1])
+                        time.sleep(1)
+                print("Trying key ", key,self.keypad_keys[key[0]][key[1]])
+                key_timing = self.press_key(key[0], key[1], True)
+                if  key_timing < self.threshold_low or key_timing > self.threshold_high:
+                    print("Adding key to password ",key,self.keypad_keys[key[0]][key[1]])
                     password.append(key)
+                    password_string += self.keypad_keys[key[0]][key[1]]
+                    input_known_password = False
+                    #Because the right key was found the next itteration of the loop should not
+                    #Input all the correct keys again, as this will add them
                     break
+                input_known_password = True
+                time.sleep(1)
 
-        return password
+        return password_string
     #press
 
     #Description:
