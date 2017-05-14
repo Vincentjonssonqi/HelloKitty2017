@@ -1,7 +1,7 @@
 
-#import smbus
+import smbus
 import time
-#from display import Display
+from display import Display
 
 class Lockpick:
     #timeout can't be found by polling the lock
@@ -171,33 +171,6 @@ class Lockpick:
             self.threshold_high = 1.5
 
 
-    #next_key
-
-    #Description:
-        #Finds the next character in the password
-    #Parameters:
-        #password: list - previous characters in password
-    #Returns:
-        #row and column of next character in password
-
-#    def next_key(self, password):
-#        password = []
-#        print(password)
-#        for row in range(self.rows):
-#            for column in range(self.columns):
-#                time.sleep(1)
-#                for i in password:
-#                    self.press_key(i[0], i[1], True)
-#                    time.sleep(1)
-#                    print("entering old password", i)
-#                print("entering ", row, column)
-#                time_taken = self.press_key(row, column, True)
-#                print(time_taken)
-#                if time_taken < self.threshold:
-#                    print("returning", row, column)
-#                    correct.append((row, column))
-#        return correct
-
     def get_password(self):
         password = []
         password_string = ""
@@ -224,23 +197,6 @@ class Lockpick:
                 time.sleep(1)
 
         return password_string
-    #press
-
-    #Description:
-        #Finds password
-    #Returns:
-        #plaintext password
-
-#    def get_password(self):
-#        password = []
-#        while len(password) < self.password_length:
-#            new_keys = self.next_key(password)
-#            if new_keys:
-#                password += (new_keys)
-#        plaintext = ""
-#        for i in password:
-#            plaintext += self.keypad_keys[i[0]][i[1]]
-#        return plaintext
 
     def test(self):
         val1 = self.i2c.read_byte(0x38)
