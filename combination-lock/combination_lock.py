@@ -4,7 +4,15 @@ import sys
 import datetime
 from classes.lock import Lock
 from classes.printer import Printer
+
+from classes.buffer import Buffer
 import RPi.GPIO as GPIO
+
+
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+
+
 #CONSTANTS--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -39,38 +47,24 @@ KEYPAD_TYPE = "polling"
 KEYPAD_KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]]
 
 
-#GLOBAL VARIABLES------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-lock = None
-printer = Printer()
-def get_password():
-    pswrd = ""
-    try:
-        #We use a try here to avoid a crash if the file does not exists
-        #Load the password.txt file into memory
-        password_file = open("password.txt","r")
-        #Store the content of the file into the password variable
-        return password_file.read()
-    except FileNotFoundError:
-        #Except FileNotFoundError as the file might not exist
-        #Assign initial default password
-        return "1234"
-        print("error")
 
 
 
 
-def signal_handler(signal, frame):
-    printer.replace("status","Preparing to exit")
 
-    lock.quit()
-    printer.replace("status","Done")
-    time.sleep(.2)
-    printer.replace("status","Good bye Mike! If you happen to be anybody else then we are in a bit of tought situation. You see this is message will always be the same. Soo.. either you change your name or you have have to remember not to read this last message on exit.")
-    GPIO.cleanup()
-    sys.exit(1)
+#init--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-def setup_print_layout():
+    #Description
+    #Initilizes variables and starts the event loop
+
+
+def init():
+
+
+
+
+    #Initilize the printer and create the GUI
+    printer = Printer()
     print("\n\n\n")
     printer.add("border_top","------------------------------------------------------------------------------------------------------------",False)
     printer.add("margin_top","",False)
@@ -83,46 +77,80 @@ def setup_print_layout():
     printer.add("keypad","[ deactivated ]",True)
     printer.add("margin_bottom","",False)
     printer.add("border_bottom","------------------------------------------------------------------------------------------------------------",False)
-#init--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    #Description
-    #Initilizes variables and starts the event loop
 
 
-def init():
-    GPIO.setwarnings(False)
-    GPIO.setmode(GPIO.BCM)
-
-    setup_print_layout()
-    #signal.signal(signal.SIGINT, signal_handler)
 
 
+
+
+    #Initlize the password variable
+    lock_password = ""
+    #Try to read the password file
+    try:
+        #We use a try here to avoid a crash if the file does not exists
+        #Load the password.txt file into memory
+        password_file = open("password.txt","r")
+        #Store the content of the file into the password variable
+        lock_password = password_file.read()
+    except FileNotFoundError:
+        #Except FileNotFoundError as the file might not exist
+        #Assign initial default password
+        lock_password = "1234"
+
+
+
+
+
+
+    #Create the lock buffer
+    #This buffer will be used to send and recieve signals from the keypad as well as sending signals to the buzzer and leds.
+    lock_buffer = Buffer(BUFFER_PINS,BUFFER_DISABLE_PIN,BUFFER_CLOCK_PIN,COLUMN_CHANGE_PIN,BUFFER_NEUTRAL_COMMAND,INTERUPT_COMMAND,NO_REAL_BUFFER)
+
+
+
+
+
+
+    #Initlize the lock
+    #This will create an instance of the Lock class
     global lock
-    lock = Lock(ENABLE_SIDE_CHANNEL_ATTACK,printer)
+    lock = Lock(lock_password,ENABLE_SIDE_CHANNEL_ATTACK,printer,lock_buffer)
 
-    lock.init_buffer(BUFFER_PINS,BUFFER_DISABLE_PIN,BUFFER_CLOCK_PIN,COLUMN_CHANGE_PIN,BUFFER_NEUTRAL_COMMAND,INTERUPT_COMMAND,NO_REAL_BUFFER)
+
+
+
+
+
+    #Init the lock components (keypad, leds and buzzer)
     lock.init_keypad(KEYPAD_TYPE,KEYPAD_KEYS)
     lock.init_components(BUZZER_COMMAND,GREEN_LED_COMMAND,RED_LED_COMMAND)
+
+
+    #Configure security, timeout, open hours and lockout settings.
     lock.config_attempt_timeout(ATTEMPT_TIMEOUT_DURATION,TIMEOUT_LED_PINS)
     lock.config_time_lockout(OPENS_AT,CLOSES_AT)
     lock.config_security(ENABLE_SIDE_CHANNEL_ATTACK)
-    lock.set_password(get_password())
-
 
     if ALLOW_MAX_LOCKOUT:
         lock.config_max_lockout(ATTEMPT_LIMIT,DEACTIVATION_DURATION)
+
+
+
+
+
+
+    
     try:
+        #This will start the lock
         lock.start()
     except KeyboardInterrupt:
+        #On keyboard interrupt the we need to cleanup GPIO ports, generate chart and print good bye mike message
         lock.quit()
         printer.replace("status","Done")
         time.sleep(.2)
         print ("\n\n\n\nGood bye Mike! If you happen to be anybody else then we are in a bit of tought situation. You see this is message will always be the same. Soo.. either you change your name or you have have to remember not to read this last message on exit.")
         GPIO.cleanup()
         sys.exit(1)
-
-
-
 
 
 

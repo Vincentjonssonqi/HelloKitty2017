@@ -8,6 +8,21 @@ class Keypad:
         self.buffer = buffer
 
 
+
+
+
+
+
+
+    #next_key----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    #Description:
+        #waits until a key has been pressed and realesed and then returns the key value
+
+    #Returns:
+        #string
+
+
     def next_key(self):
         if self.use_interrupt:
             self.buffer.next_column_change()
@@ -18,13 +33,21 @@ class Keypad:
 
 
 
-    #poll_keypad----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+    #check_keypad----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description:
-    #Goes through all rows and checks if a key is pressed
+        #Goes through all rows and checks if a key is pressed
 
     #Returns:
-    #None or the key value (String)
+        #None or the key value (String)
 
 
     def check_keypad(self):
@@ -39,11 +62,20 @@ class Keypad:
 
 
 
+
+
+
+
     #poll_row----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description:
-    #Polls the row and if an active column is present, return the key value, ones the key has been released
+        #Polls the row and if an active column is present, return the key value, ones the key has been released
 
+    #Parameters:
+        #row:int
+
+    #Returns:
+        #int or None
 
     def poll_row(self,row):
         #print(row)
@@ -55,13 +87,24 @@ class Keypad:
         return None;
 
 
-    
+
+
+
+
+
 
 
     #poll_key----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description:
-    #Polls a single row and checks a single column until the button is released
+        #Polls a single row and checks a single column until the button is released
+
+    #Parameters:
+        #row:int
+        #column:int
+
+    #Returns:
+        #int
 
 
     def poll_key(self,row,column):

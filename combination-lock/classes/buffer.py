@@ -33,9 +33,9 @@ class Buffer:
     #start_keypad_interupt
 
     #Description:
-    #Asks the pi to call the poll_keypad function when an active column is detected
-    #The difference between this and constantly polling is that you save a lot of resources when you
-    #only have to poll the keypad when a person is actually pressing a key
+        #Asks the pi to call the poll_keypad function when an active column is detected
+        #The difference between this and constantly polling is that you save a lot of resources when you
+        #only have to poll the keypad when a person is actually pressing a key
     def next_column_change(self):
         #We start of by writing switching the keypad state to interupt mode
         GPIO.cleanup(self.column_change_pin)
@@ -59,14 +59,20 @@ class Buffer:
 
 
 
+
+
+
+
+
+
     #write-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description
-    #Writes a integer value to the buffer
-
+        #Writes a integer value to the buffer
 
     #Parameters:
-    #number: An integerself.buffer.neutral_commandfer(False)
+        #number: An integerself.buffer.neutral_commandfer(False)
+
     def write(self,number):
         self.enable_buffer(False)
         time.sleep(.001)
@@ -87,7 +93,10 @@ class Buffer:
 
 
 
-    #debounce
+
+
+
+    #debounce (James debounce code)
 
     #Description:
     #Debounces the reads on the column lines
@@ -103,15 +112,21 @@ class Buffer:
 
 
 
+
+
+
+
+
+
+
     #read-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description
-    #Reads the buffer and converts it to a number
+        #Reads the buffer and converts it to a number
 
 
     #Returns:
-    #An integer number
-
+        #An integer number
 
     def read(self):
         #Turn the register chip off so that you do not have interference
@@ -149,24 +164,59 @@ class Buffer:
 
 
 
+
+
+
+
+
+
+    #enable_buffer-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    #Description:
+        #Enables or dissables the buffer chip. This is important as the register and buffer can not be open
+        #at the same time
+
+    #Parameters:
+        #enable:boolean
+        
     def enable_buffer(self,enable):
         #print("enable buffer: {} pin: {}".format(enable,self.buffer_control_pin))
         GPIO.output(self.buffer_control_pin,not enable)
+
+
+
+
+
+
+
+
+
+
+
+
+    #enable_register-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    #Description:
+        #Enables or dissables the register chip. This is important as the register and buffer can not be open
+        #at the same time
+
+    #Parameters:
+        #enable:boolean
+
     def enable_register(self,enable):
         #print("enable register: {} pin: {}".format(enable,self.register_control_pin))
         GPIO.output(self.register_control_pin,enable)
 
-    #convert_number_to_buffer-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    #Description
-    #Converts a integer value to an n bit binary number
 
-    #Parameters:
-    #number: An integer number that do not exceed the size of the buffer when converted into binary
 
-    #Returns:
-    #Buffer values in the form of a List<boolean>
 
+
+
+    #clock_register-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    #Description:
+        #Clocks the register so that the values being written can be savede in the register
 
     def clock_register (self):
         self.enable_register(False)
@@ -174,6 +224,23 @@ class Buffer:
         self.enable_register(True)
         time.sleep(.001)
         self.enable_register(False)
+
+
+
+
+
+
+
+    #convert_number_to_buffer-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    #Description
+        #Converts a integer value to an n bit binary number
+
+    #Parameters:
+        #number: An integer number that do not exceed the size of the buffer when converted into binary
+
+    #Returns:
+        #Buffer values in the form of a List<boolean>
 
     def convert_number_to_buffer(self,number):
 
@@ -194,18 +261,19 @@ class Buffer:
     #convert_number_to_buffer-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description
-    #Converts a buffer array to an interger value
+        #Converts a buffer array to an interger value
 
     #Parameters:
-    #buffer: Array with boolean values indicating the values for each bit in the buffer
+        #buffer: Array with boolean values indicating the values for each bit in the buffer
 
     #Returns:
-    #Gives you an integer value back
+        #Gives you an integer value back
 
     def convert_buffer_to_number(self,buffer):
-
-        binary_string = ["1" if buffer[i] else "0" for i in range(len(buffer))]                     #Convert the buffer array into a binary string
-        return int(binary_string,2)                                                                 #Convert binary string into Integer
+        #Convert the buffer array into a binary string
+        binary_string = ["1" if buffer[i] else "0" for i in range(len(buffer))]
+        #Convert binary string into Integer
+        return int(binary_string,2)
 
 
 
@@ -213,13 +281,13 @@ class Buffer:
 	#convert_buffer_to_column-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     #Description
-    #Converts a buffer array to an column interger value
+        #Converts a buffer array to an column interger value
 
     #Parameters:
-    #buffer: Array with boolean values indicating the values for each bit in the buffer
+        #buffer: Array with boolean values indicating the values for each bit in the buffer
 
     #Returns:
-    #Gives you an integer value back (either 0,1,2) or None if no column was active
+        #Gives you an integer value back (either 0,1,2) or None if no column was active
 
     def convert_buffer_to_column(self,buffer):
         for i in range(len(buffer)):
