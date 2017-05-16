@@ -1,11 +1,12 @@
 
 import smbus
 import time
+import csv
 from display import Display
 
 class Lockpick:
     #timeout can't be found by polling the lock
-    def __init__(self, lock_type="polling", password_length=4, timeout=3.5,correct_timeout = 3.0, discover_timings=True,hardware = False):
+    def __init__(self, lock_type="polling", password_length=4, timeout=3.5,correct_timeout = 3.0, discover_timings=True,hardware = True):
         self.lock_type = lock_type
         self.password_length = password_length
         self.timeout = timeout
@@ -36,7 +37,7 @@ class Lockpick:
 
     def generate_test_variables(self):
         self.attempt = ""
-        self.password = "7427"
+        self.password = "0000"
 
     def update_attempt(self,row,column):
         self.attempt += self.keypad_keys[row][column]
@@ -45,12 +46,30 @@ class Lockpick:
 
         if correct_length and correct_content:
             self.attempt = ""
+            print("correct pin and length", self.attempt)
             return 2.9
         elif correct_content:
+            print("Correct pin", self.attempt)
             return .15
         else:
+            print("Wrong pin", self.attempt)
             self.attempt = ""
             return .8
+    def update_brute_force_attempt(self,row,column):
+        self.attempt += self.keypad_keys[row][column]
+        correct_content = self.password.startswith(self.attempt)
+        correct_length = len(self.password) == len(self.attempt)
+
+        if correct_length and correct_content:
+            self.attempt = ""
+            print("correct pin and length", self.attempt)
+            return 2.9
+        elif correct_length and not correct_content:
+            print("Wrong pin", self.attempt)
+            self.attempt = ""
+            return .8
+        else:
+            return .15
 
 
     #press
@@ -113,7 +132,7 @@ class Lockpick:
 
     def press_key(self, row, column, return_time=False):
         if not self.hardware:
-            timing = self.update_attempt(row,column)
+            timing = self.update_brute_force_attempt(row,column)
             time.sleep(timing)
             return timing if return_time else None
 
@@ -190,7 +209,7 @@ class Lockpick:
                     password.append(key)
                     password_string += self.keypad_keys[key[0]][key[1]]
                     input_known_password = False
-                    #Because the right key was found the next itteration of the loop should not
+                    #Because the right key was found the next iteration of the loop should not
                     #Input all the correct keys again, as this will add them
                     break
                 input_known_password = True
@@ -264,3 +283,20 @@ class Lockpick:
             print(t0,t1,dt,column,row,self.keypad_keys[row][column])
 
             time.sleep(1)
+
+
+    def brute_force(self):
+        map = {"1": (0, 0), "2": (0, 1), "3": (0, 2), "4": (1, 0), "5": (1, 1), "6": (1, 2), "7": (2, 0), "8": (2, 1), "9": (2, 2), "*": (3, 0), "0": (3, 1), "#": (3, 2)}
+        file = open("test_order.csv")
+        reader = csv.reader(file)
+        test_order = reader.__next__()
+        for pin in test_order:
+            count = 0
+            print(pin)
+            for digit in pin:
+                count += 1
+                if count == self.password_length:
+                    if self.press_key(map[digit][0], map[digit][1], True) > self.threshold_high:
+                        return pin
+                else:
+                    self.press_key(map[digit][0], map[digit][1])

@@ -111,7 +111,7 @@ class Lock:
         #timeout_led_pins:List<int>
 
     def config_attempt_timeout(self,duration,timeout_led_pins):
-        self.timeout_leds = map(lambda pin: InternalLed(pin), timeout_led_pins)
+        self.timeout_leds = list(map(lambda pin: InternalLed(pin), timeout_led_pins))
         self.attempt_timeout_duration = duration
         self.has_attempt_timeout = True
 
@@ -446,7 +446,7 @@ class Lock:
         timestamp = datetime.combine(date.min,datetime.now().time()) - datetime.min
         if self.opens_at != self.closes_at:
             if timestamp < self.opens_at or timestamp > self.closes_at:
-                return ((self.opens_at - timestamp) + timedelta(1,0)).total_seconds()
+                return (self.opens_at - timestamp).total_seconds()
         return 0
 
 
@@ -604,7 +604,7 @@ class Lock:
     def unlock(self,attempt):
         if not attempt:
             return
-        if self.is_password_correct(.attemptpassword) and self.is_password_complete(attempt.password):
+        if self.is_password_correct(attempt.password) and self.is_password_complete(attempt.password):
             self.succeeded_to_unlock(attempt)
             return 1
         elif self.is_password_correct(attempt.password):
