@@ -2,10 +2,11 @@ import signal
 import time
 import sys
 import datetime
+
 from classes.lock import Lock
 from classes.printer import Printer
-
 from classes.buffer import Buffer
+
 import RPi.GPIO as GPIO
 
 
@@ -139,7 +140,7 @@ def init():
 
 
 
-    
+
     try:
         #This will start the lock
         lock.start()
