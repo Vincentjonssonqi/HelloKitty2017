@@ -289,14 +289,18 @@ class Lockpick:
         map = {"1": (0, 0), "2": (0, 1), "3": (0, 2), "4": (1, 0), "5": (1, 1), "6": (1, 2), "7": (2, 0), "8": (2, 1), "9": (2, 2), "*": (3, 0), "0": (3, 1), "#": (3, 2)}
         file = open("test_order.csv")
         reader = csv.reader(file)
+        print(self.threshold_high)
         test_order = reader.__next__()
         for pin in test_order:
             count = 0
             print(pin)
             for digit in pin:
+                time.sleep(1)
                 count += 1
                 if count == self.password_length:
                     if self.press_key(map[digit][0], map[digit][1], True) > self.threshold_high:
                         return pin
+                    time.sleep(3)
+                    print(len(pin))
                 else:
                     self.press_key(map[digit][0], map[digit][1])

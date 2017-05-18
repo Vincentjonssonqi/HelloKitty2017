@@ -400,6 +400,7 @@ class Lock:
         else:
             self.busy = True
             self.reset_attempt_timeout()
+
             self.failed_to_unlock(self.attempt)
             self.busy = False
             if self.using_interrupt:
@@ -489,7 +490,8 @@ class Lock:
         #Boolean
 
     def is_password_complete(self,password):
-        return len(self.password) == len(password)
+        #print(password)
+        return len(self.password) == len(password) 
 
 
 

@@ -28,21 +28,21 @@ RED_LED_COMMAND = 5
 GREEN_LED_COMMAND = 4
 INTERUPT_COMMAND = 7
 
-ATTEMPT_LIMIT = 3
+ATTEMPT_LIMIT = 2
 #The number of seconds the lock will be deactivated for if an attempt limit is reached
 DEACTIVATION_DURATION = 10
 ATTEMPT_TIMEOUT_DURATION = 3
 #Opens at 9AM
-OPENS_AT = datetime.time(9,0)
+OPENS_AT = datetime.time(8,0)
  #Closes at 21PM
-CLOSES_AT = datetime.time(9,0)
+CLOSES_AT = datetime.time(8,0)
 
 
 ALLOW_MAX_LOCKOUT = False
 #If you wish to try the code without the actual keypad you make this True, and random keys will be entered at random time intervals
 NO_REAL_BUFFER = False
 #This value is used to configure the lock to be vulnerable to a side channel attack
-ENABLE_SIDE_CHANNEL_ATTACK = True
+ENABLE_SIDE_CHANNEL_ATTACK = False
 #Can be either polling or interupt
 KEYPAD_TYPE = "polling"
 KEYPAD_KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],["*","0","#"]]
